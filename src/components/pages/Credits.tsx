@@ -23,6 +23,7 @@ const TEAM: TeamMember[] = [
     regNo: '25BCE1190',
     role: 'Developer',
     initials: 'AG',
+    photoUrl: '/member2.jpg',
     gradient: 'from-purple-600 to-pink-600',
   }
 ];
