@@ -13,18 +13,19 @@ export function getSchema(db: Database, excludeTables: Set<string> = new Set()):
       if (excludeTables.has(tableName)) continue;
       const tableInfo = getTableInfo(db, tableName);
       tables.push(tableInfo);
-    }
-  }
 
-  const fkResults = db.exec("SELECT * FROM pragma_foreign_key_list('ARTWORK') UNION SELECT * FROM pragma_foreign_key_list('SALE');");
-  if (fkResults.length > 0) {
-    for (const row of fkResults[0].values) {
-      foreignKeys.push({
-        fromTable: row[2] as string,
-        fromColumn: row[3] as string,
-        toTable: row[4] as string,
-        toColumn: row[5] as string,
-      });
+      // Dynamically extract foreign keys for every table
+      const fkResult = db.exec(`PRAGMA foreign_key_list("${tableName.replace(/"/g, '""')}");`);
+      if (fkResult.length > 0) {
+        for (const fkRow of fkResult[0].values) {
+          foreignKeys.push({
+            fromTable: tableName,
+            fromColumn: fkRow[3] as string,
+            toTable: fkRow[2] as string,
+            toColumn: fkRow[4] as string,
+          });
+        }
+      }
     }
   }
 
@@ -33,8 +34,9 @@ export function getSchema(db: Database, excludeTables: Set<string> = new Set()):
 
 function getTableInfo(db: Database, tableName: string): TableInfo {
   const columns: ColumnInfo[] = [];
+  const quotedName = `"${tableName.replace(/"/g, '""')}"`;
 
-  const pragmaResult = db.exec(`PRAGMA table_info(${tableName});`);
+  const pragmaResult = db.exec(`PRAGMA table_info(${quotedName});`);
   if (pragmaResult.length > 0) {
     for (const row of pragmaResult[0].values) {
       columns.push({
@@ -47,7 +49,7 @@ function getTableInfo(db: Database, tableName: string): TableInfo {
     }
   }
 
-  const fkResult = db.exec(`PRAGMA foreign_key_list(${tableName});`);
+  const fkResult = db.exec(`PRAGMA foreign_key_list(${quotedName});`);
   if (fkResult.length > 0) {
     for (const row of fkResult[0].values) {
       const fromColumn = row[3] as string;
@@ -61,14 +63,20 @@ function getTableInfo(db: Database, tableName: string): TableInfo {
     }
   }
 
-  const countResult = db.exec(`SELECT COUNT(*) FROM ${tableName};`);
-  const rowCount = countResult.length > 0 ? (countResult[0].values[0][0] as number) : 0;
+  let rowCount = 0;
+  try {
+    const countResult = db.exec(`SELECT COUNT(*) FROM ${quotedName};`);
+    rowCount = countResult.length > 0 ? (countResult[0].values[0][0] as number) : 0;
+  } catch {
+    // Table may not exist yet during schema refresh
+  }
 
   return { name: tableName, columns, rowCount };
 }
 
 export function getTablePreview(db: Database, tableName: string, limit = 50): { columns: string[]; rows: unknown[][] } {
-  const result = db.exec(`SELECT * FROM ${tableName} LIMIT ${limit};`);
+  const quotedName = `"${tableName.replace(/"/g, '""')}"`;
+  const result = db.exec(`SELECT * FROM ${quotedName} LIMIT ${limit};`);
   if (result.length === 0) {
     return { columns: [], rows: [] };
   }
@@ -79,6 +87,11 @@ export function getTablePreview(db: Database, tableName: string, limit = 50): { 
 }
 
 export function getTableCount(db: Database, tableName: string): number {
-  const result = db.exec(`SELECT COUNT(*) FROM ${tableName};`);
-  return result.length > 0 ? (result[0].values[0][0] as number) : 0;
+  const quotedName = `"${tableName.replace(/"/g, '""')}"`;
+  try {
+    const result = db.exec(`SELECT COUNT(*) FROM ${quotedName};`);
+    return result.length > 0 ? (result[0].values[0][0] as number) : 0;
+  } catch {
+    return 0;
+  }
 }

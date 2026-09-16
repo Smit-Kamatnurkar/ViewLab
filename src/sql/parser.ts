@@ -180,6 +180,83 @@ export function parseSQL(sql: string): ParsedSQL {
   return { type: 'OTHER', originalSQL: sql };
 }
 
+export function splitSQLStatements(sql: string): string[] {
+  const statements: string[] = [];
+  let current = '';
+  let inString = false;
+  let stringChar = '';
+  let inLineComment = false;
+  let inBlockComment = false;
+
+  for (let i = 0; i < sql.length; i++) {
+    const char = sql[i];
+    const nextChar = sql[i + 1] || '';
+
+    if (inBlockComment) {
+      current += char;
+      if (char === '*' && nextChar === '/') {
+        inBlockComment = false;
+        current += '/';
+        i++;
+      }
+      continue;
+    }
+
+    if (inLineComment) {
+      current += char;
+      if (char === '\n') {
+        inLineComment = false;
+      }
+      continue;
+    }
+
+    if (char === '-' && nextChar === '-') {
+      inLineComment = true;
+      current += char + nextChar;
+      i++;
+      continue;
+    }
+
+    if (char === '/' && nextChar === '*') {
+      inBlockComment = true;
+      current += char + nextChar;
+      i++;
+      continue;
+    }
+
+    if (inString) {
+      current += char;
+      if (char === stringChar) {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (char === "'" || char === '"' || char === '`') {
+      inString = true;
+      stringChar = char;
+      current += char;
+      continue;
+    }
+
+    if (char === ';') {
+      if (current.trim()) {
+        statements.push(current.trim());
+      }
+      current = '';
+      continue;
+    }
+
+    current += char;
+  }
+
+  if (current.trim()) {
+    statements.push(current.trim());
+  }
+
+  return statements;
+}
+
 export function extractDependencies(definition: string, existingViews: Map<string, any>, existingMVs: Map<string, any>): string[] {
   const tables = extractTableNames(definition);
   const dependencies = new Set<string>();

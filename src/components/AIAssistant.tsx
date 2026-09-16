@@ -6,6 +6,129 @@ const SYSTEM_PROMPT = `You are the ViewLab AI Assistant. You help users understa
 Analyze the user's question in the context of their current database schema, recent queries, and execution plans.
 Keep your answers concise, practical, and highly relevant to the provided context.`;
 
+const MOCK_RESPONSES: Record<string, string> = {
+  'stale': `**Why is a Materialized View STALE?**
+
+A Materialized View stores a *snapshot* of the query result at creation (or last refresh) time. When you INSERT, UPDATE, or DELETE rows in the base table, the MV's stored result becomes *outdated* — it doesn't know the data changed.
+
+**To fix:** Run \`REFRESH MATERIALIZED VIEW <name>;\` to re-execute the defining query and store the fresh result.
+
+The key difference: A normal **View** would show the updated data immediately because it re-runs the query each time.`,
+  
+  'view': `**What is a View?**
+
+A View is a *virtual table* defined by a SQL query. It does NOT store data — it stores the query definition. Every time you SELECT from a View, the database:
+
+1. Looks up the stored query definition
+2. Replaces the view name with the query
+3. Executes the expanded query against current data
+4. Returns the live result
+
+**Key property:** Views always return current, up-to-date data because they re-execute their definition on every access.`,
+
+  'materialized': `**What is a Materialized View?**
+
+A Materialized View (MV) executes its defining query once and stores the result as a real table. When you query it:
+
+1. The database reads from the stored physical table
+2. No computation is needed — it's a simple table scan
+3. This is much faster than re-computing complex aggregations
+
+**Trade-off:** The stored result can become *stale* when base tables change. You must manually REFRESH to sync.
+
+**Use when:** You have expensive aggregations that are read frequently and you can tolerate some staleness.`,
+
+  'refresh': `**How does REFRESH work?**
+
+When you run \`REFRESH MATERIALIZED VIEW <name>\`:
+
+1. The system finds the MV's original defining query
+2. Drops the existing stored result table
+3. Re-executes the defining query against the current database state
+4. Creates a new table with the fresh results
+5. Updates the MV status from STALE → FRESH
+
+**Performance note:** Refresh time is proportional to the complexity of the defining query, not the number of changes. It fully recomputes.`,
+
+  'depend': `**Dependencies in ViewLab**
+
+When a View or MV references a base table, a *dependency* is created:
+
+- **Table → View**: The View depends on the table
+- **Table → MV**: The MV depends on the table
+- **View → View**: Nested views create transitive dependencies
+
+When a base table is modified (INSERT/UPDATE/DELETE), ViewLab:
+1. Finds all dependent MVs
+2. Marks them as STALE
+3. Views remain unaffected (they always re-execute)
+
+View the dependency graph in the Dependencies page.`,
+
+  'compare': `**View vs Materialized View Comparison:**
+
+| Feature | View | Materialized View |
+|---------|------|------------------|
+| Storage | None (query only) | Physical table |
+| Speed | Re-computes each time | Reads stored result |
+| Freshness | Always current ✅ | Can become stale ⚠️ |
+| Refresh | Not needed | Required after changes |
+| Best for | Simple queries, security | Dashboards, analytics |
+
+**Rule of thumb:** If freshness matters → View. If performance matters → Materialized View.`,
+
+  'create': `**Creating Views and MVs in ViewLab:**
+
+**Normal View:**
+\`\`\`sql
+CREATE VIEW expensive_art AS
+SELECT * FROM ARTWORK WHERE price > 100000000;
+\`\`\`
+
+**Materialized View:**
+\`\`\`sql
+CREATE MATERIALIZED VIEW expensive_art_mv AS
+SELECT * FROM ARTWORK WHERE price > 100000000;
+\`\`\`
+
+The key difference: The MV runs the query immediately and stores the result. The View just stores the query definition.
+
+After creating both, try modifying the base table to see how they behave differently!`,
+
+  'error': `I see you're having trouble with a query. Common issues:
+
+1. **Table not found** — Check the table name matches exactly (case-sensitive)
+2. **Column not found** — Verify column names in your schema
+3. **Syntax error** — Check for missing semicolons, unmatched quotes
+4. **View already exists** — Use DROP VIEW first, then CREATE VIEW
+
+Try checking the table structure in the Overview page, or ask me about a specific error message.`,
+
+  'help': `**Welcome to ViewLab! Here's what you can do:**
+
+🔬 **SQL Lab** — Write and execute SQL queries
+🧪 **Simulator** — Step-by-step animated execution visualization
+📊 **Compare** — Side-by-side View vs MV comparison
+🔗 **Dependencies** — Visual dependency graph
+📚 **Tutorial** — Learn about Views and MVs step by step
+🧫 **Labs** — Guided hands-on exercises
+🌍 **Use Cases** — Real-world scenarios to explore
+
+**Try this workflow:**
+1. Create a View and a Materialized View with the same query
+2. Insert data into the base table
+3. Compare the results — the View updates, the MV doesn't!`,
+};
+
+const QUICK_PROMPTS = [
+  'What is a View?',
+  'View vs Materialized View?',
+  'Why is my MV stale?',
+  'How does REFRESH work?',
+  'How do dependencies work?',
+  'Help me get started',
+];
+
 export function AIAssistant() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant' | 'system', content: string }[]>([
@@ -52,6 +175,33 @@ Last Result Rows: ${lastResult?.rowCount || 0}
 Dependency Graph Nodes: ${graphState.nodes.map(n => n.id + ' (' + n.type + ')').join(', ')}`;
   };
 
+  const getMockResponse = (query: string): string => {
+    const lower = query.toLowerCase();
+    
+    // Check all mock response keywords
+    for (const [key, response] of Object.entries(MOCK_RESPONSES)) {
+      if (lower.includes(key)) return response;
+    }
+
+    // Context-aware responses
+    if (lower.includes('fail') || lower.includes('error')) {
+      if (lastResult?.error) {
+        return `I see your last query failed with: "${lastResult.error}". This usually means there's a syntax error or a missing table. Check the table names in the Overview page.`;
+      }
+      return MOCK_RESPONSES['error'];
+    }
+
+    return `I'm a **local educational assistant** (no API key required). I can help with:
+
+- **Views & Materialized Views** — "What is a View?"
+- **Staleness** — "Why is my MV stale?"
+- **Refresh** — "How does REFRESH work?"
+- **Dependencies** — "How do dependencies work?"
+- **Comparison** — "View vs Materialized View?"
+
+For advanced AI responses, configure an API key in Settings → System.`;
+  };
+
   const askOpenAI = async (userMessage: string) => {
     try {
       const url = provider === 'compatible' && baseUrl ? baseUrl + '/chat/completions' : 'https://api.openai.com/v1/chat/completions';
@@ -83,10 +233,10 @@ Dependency Graph Nodes: ${graphState.nodes.map(n => n.id + ' (' + n.type + ')').
     }
   };
 
-  const handleSend = async () => {
-    if (!input.trim() || loading) return;
+  const handleSend = async (customInput?: string) => {
+    const userMessage = customInput || input;
+    if (!userMessage.trim() || loading) return;
     
-    const userMessage = input;
     setMessages(prev => [...prev, { role: 'user', content: userMessage }]);
     setInput('');
     setLoading(true);
@@ -95,22 +245,12 @@ Dependency Graph Nodes: ${graphState.nodes.map(n => n.id + ' (' + n.type + ')').
       let responseText = '';
       if (provider !== 'mock') {
         if (!apiKey) {
-          throw new Error('API Key is missing. Please configure it in Settings -> System.');
+          throw new Error('API Key is missing. Please configure it in Settings → System.');
         }
         responseText = await askOpenAI(userMessage);
       } else {
-        await new Promise(r => setTimeout(r, 600));
-        const query = userMessage.toLowerCase();
-        responseText = "I'm a local mock assistant. Configure a real provider in Settings!";
-        if (query.includes('stale')) {
-          responseText = "Your source table changed after the Materialized View was created. The MV stores the previous result, so it has not automatically incorporated the new row. Refresh it to synchronize the stored result.";
-        } else if (query.includes('fail') || query.includes('error')) {
-          if (lastResult?.error) {
-            responseText = `I see your last query failed with: "${lastResult.error}". This usually means there's a syntax error.`;
-          } else {
-            responseText = "I don't see any recent errors.";
-          }
-        }
+        await new Promise(r => setTimeout(r, 500));
+        responseText = getMockResponse(userMessage);
       }
       setMessages(prev => [...prev, { role: 'assistant', content: responseText }]);
     } catch (e: any) {
@@ -128,7 +268,7 @@ Dependency Graph Nodes: ${graphState.nodes.map(n => n.id + ' (' + n.type + ')').
         <h3 className="font-bold text-primary flex items-center gap-2">
           ViewLab Assistant
           <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-muted text-muted-foreground">
-            {provider !== 'mock' ? `${provider} • ${model}` : 'Local Demo AI'}
+            {provider !== 'mock' ? `${provider} • ${model}` : 'Educational AI'}
           </span>
         </h3>
         <div className="flex gap-2">
@@ -141,12 +281,26 @@ Dependency Graph Nodes: ${graphState.nodes.map(n => n.id + ' (' + n.type + ')').
       <div className="flex-1 p-4 overflow-y-auto space-y-4">
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[85%] rounded-lg p-3 text-sm ${msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'neo-surface-inset text-foreground'}`}>
+            <div className={`max-w-[85%] rounded-lg p-3 text-sm whitespace-pre-wrap ${msg.role === 'user' ? 'bg-primary text-primary-foreground' : 'neo-surface-inset text-foreground'}`}>
               {msg.content}
             </div>
           </div>
         ))}
         {loading && <div className="text-xs text-muted-foreground animate-pulse">Assistant is typing...</div>}
+      </div>
+
+      {/* Quick prompts */}
+      <div className="px-4 py-2 border-t border-border/5 flex flex-wrap gap-1.5">
+        {QUICK_PROMPTS.map(prompt => (
+          <button
+            key={prompt}
+            onClick={() => handleSend(prompt)}
+            disabled={loading}
+            className="text-[10px] px-2 py-1 rounded-full border border-border text-muted-foreground hover:text-foreground hover:border-primary/30 transition-colors disabled:opacity-30"
+          >
+            {prompt}
+          </button>
+        ))}
       </div>
 
       <div className="p-4 border-t border-border/10 bg-background/50">
@@ -160,7 +314,7 @@ Dependency Graph Nodes: ${graphState.nodes.map(n => n.id + ' (' + n.type + ')').
             disabled={loading}
             className="flex-1 bg-background border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary/50"
           />
-          <button onClick={handleSend} disabled={loading} className="neo-button-primary px-3 py-2 rounded-lg disabled:opacity-50">
+          <button onClick={() => handleSend()} disabled={loading} className="neo-button-primary px-3 py-2 rounded-lg disabled:opacity-50">
             Send
           </button>
         </div>

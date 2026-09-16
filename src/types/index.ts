@@ -24,6 +24,14 @@ export interface DatabaseSchema {
   foreignKeys: ForeignKeyInfo[];
 }
 
+export interface DuplicateViewConflict {
+  name: string;
+  type: 'VIEW' | 'MATERIALIZED_VIEW';
+  existingDefinition: string;
+  newDefinition: string;
+  sql: string;
+}
+
 export interface QueryResult {
   columns: string[];
   rows: unknown[][];
@@ -31,6 +39,13 @@ export interface QueryResult {
   executionTime: number;
   plan?: string[];
   error?: string;
+  operation?: string;
+  objectName?: string;
+  sourceType?: 'TABLE' | 'VIEW' | 'MATERIALIZED_VIEW' | 'OTHER';
+  mvStatus?: 'FRESH' | 'STALE';
+  lastRefreshedAt?: number;
+  simulationSteps?: SimulationStep[];
+  warnings?: string[];
 }
 
 export type ViewStatus = 'LIVE';
@@ -59,10 +74,13 @@ export interface MaterializedViewInfo {
 export interface HistoryEntry {
   id: string;
   timestamp: number;
+  sql?: string;
   operation: string;
   object: string;
   status: 'SUCCESS' | 'ERROR' | 'STALE' | 'REFRESHED';
   details?: string;
+  executionTime?: number;
+  rowsAffected?: number;
 }
 
 export interface LabStep {
@@ -118,7 +136,7 @@ export interface ExecutionFlow {
   type: 'view' | 'materialized-view' | 'refresh' | 'query';
 }
 
-export type SQLOperationType = 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE' | 'CREATE_VIEW' | 'DROP_VIEW' | 'CREATE_MATERIALIZED_VIEW' | 'DROP_MATERIALIZED_VIEW' | 'REFRESH_MATERIALIZED_VIEW' | 'OTHER';
+export type SQLOperationType = 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE' | 'CREATE_VIEW' | 'DROP_VIEW' | 'CREATE_MATERIALIZED_VIEW' | 'DROP_MATERIALIZED_VIEW' | 'REFRESH_MATERIALIZED_VIEW' | 'CREATE_TABLE' | 'OTHER';
 
 export interface ParsedSQL {
   type: SQLOperationType;
@@ -129,6 +147,32 @@ export interface ParsedSQL {
   whereClause?: string;
   definition?: string;
   originalSQL: string;
+}
+
+// Simulation types
+export interface SimulationStep {
+  id: string;
+  label: string;
+  description: string;
+  detail?: string;
+  icon: 'parse' | 'identify' | 'resolve' | 'execute' | 'store' | 'define' | 'graph' | 'result' | 'refresh' | 'stale' | 'scan' | 'filter' | 'group' | 'aggregate';
+  status: 'pending' | 'running' | 'complete';
+  highlight?: 'view' | 'materialized-view' | 'table' | 'stale' | 'fresh' | 'refresh';
+}
+
+// Scenario types
+export interface Scenario {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  schemaSQL: string;
+  seedSQL: string;
+  createViewSQL: string;
+  createMVSQL: string;
+  dmlSQL: string;
+  refreshSQL: string;
+  expectedStale: string;
 }
 
 export interface AppState {
@@ -169,17 +213,20 @@ export interface HistoryState {
   entries: HistoryEntry[];
 }
 
+export type ActivePage = 'overview' | 'sql-lab' | 'dependencies' | 'compare' | 'flow' | 'labs' | 'credits' | 'settings' | 'history' | 'learn' | 'simulation' | 'use-cases' | 'export';
+
 export interface UIState {
   sidebarOpen: boolean;
   sidebarTab: 'database' | 'labs' | 'history';
   learnMode: boolean;
   theme: 'dark' | 'light';
   activePanel: 'editor' | 'result' | 'comparison' | 'graph' | 'flow';
-  activePage: 'overview' | 'sql-lab' | 'dependencies' | 'compare' | 'flow' | 'labs' | 'credits' | 'settings';
+  activePage: ActivePage;
   splitRatio: number;
   selectedGraphNode: string | null;
   selectedView: string | null;
 }
+
 export interface ValidationContext {
   db: import('sql.js').Database;
   viewManager: import('../views/manager').ViewManager;

@@ -9,12 +9,18 @@ import { Button } from './components/Button';
 import { Overview } from './components/pages/Overview';
 import { Credits } from './components/pages/Credits';
 import { Settings } from './components/pages/Settings';
+import { LearnPage } from './components/pages/LearnPage';
+import { HistoryPage } from './components/pages/HistoryPage';
+import { UseCasesPage } from './components/pages/UseCasesPage';
 import { SQLEditor } from './components/SQLEditor';
 import { DependencyGraphView } from './components/DependencyGraph';
 import { ExecutionFlowView } from './components/ExecutionFlowView';
 import { ComparisonView } from './components/ComparisonView';
+import { SimulationView } from './components/SimulationView';
 import { LabsPanel } from './components/layout/LabsPanel';
 import { AIAssistant } from './components/AIAssistant';
+import { LearnModePanel } from './components/LearnMode';
+import { ExportPanel } from './components/ExportPanel';
 
 export default function App() {
   const {
@@ -122,9 +128,12 @@ export default function App() {
     );
   }
 
-  const activePage = (ui as any).activePage || 'overview';
-    const buildExecutionFlow = () => {
+  const activePage = ui.activePage || 'overview';
+
+  const buildExecutionFlow = () => {
     const selectedNormalView = selectedView ? viewManager.getView(selectedView) : null;
+    const selectedMV = selectedView ? mvManager.getView(selectedView) : null;
+
     if (selectedNormalView) {
       return {
         type: 'view' as const,
@@ -174,10 +183,6 @@ export default function App() {
     return null;
   };
 
-  const selectedMV = selectedView ? mvManager.getView(selectedView) : null;
-  const mvLiveResult = null;
-  const mvStoredResult = selectedMV ? selectedMV.result : null;
-
   return (
     <div className="flex h-screen bg-background overflow-hidden text-foreground">
       <Sidebar />
@@ -187,6 +192,11 @@ export default function App() {
         {activePage === 'overview' && <Overview />}
         {activePage === 'credits' && <Credits />}
         {activePage === 'settings' && <Settings />}
+        {activePage === 'learn' && <LearnPage />}
+        {activePage === 'history' && <HistoryPage />}
+        {activePage === 'use-cases' && <UseCasesPage />}
+        {activePage === 'simulation' && <SimulationView />}
+        {activePage === 'export' && <ExportPanel />}
         
         {activePage === 'sql-lab' && (
           <div className="flex-1 min-h-0 p-4 overflow-hidden flex flex-col">
@@ -212,18 +222,7 @@ export default function App() {
           </div>
         )}
 
-        {activePage === 'compare' && (
-          <div className="flex-1 min-h-0 p-4 overflow-hidden flex flex-col">
-            <div className="neo-surface flex-1 min-h-0 overflow-hidden flex flex-col">
-              <ComparisonView
-                viewResult={mvLiveResult}
-                mvResult={mvStoredResult}
-                mvStatus={selectedMV?.status || 'FRESH'}
-                mvName={selectedMV?.name}
-              />
-            </div>
-          </div>
-        )}
+        {activePage === 'compare' && <ComparisonView />}
 
         {activePage === 'labs' && (
           <div className="flex-1 min-h-0 p-4 overflow-hidden flex flex-col">
@@ -238,8 +237,9 @@ export default function App() {
           </div>
         )}
         
-            <AIAssistant />
-    </div>
+        <AIAssistant />
+        <LearnModePanel />
+      </div>
     </div>
   );
 }

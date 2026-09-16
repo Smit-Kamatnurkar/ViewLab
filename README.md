@@ -1,59 +1,98 @@
-# ViewLab
+# ViewLab — View & Materialized View Simulator
 
-ViewLab is an interactive SQL laboratory designed for understanding the differences between SQL Views and Materialized Views. 
+**DBMS Module 2 Project: Interactive Simulator for Virtual Views, Materialized Views, and Dependency Invalidation**
 
-It provides an educational sandbox for experimenting with database dependencies, query execution plans, and performance characteristics between always-current virtual tables and persisted materialized datasets.
+ViewLab is a visually impressive, educational, interactive DBMS simulator built to demonstrate exactly how standard **Views** (virtual, computed dynamically) and **Materialized Views** (physical, snapshot storage) operate under the hood, how base table DML operations propagate dependency changes, and when materialized views become `STALE`.
 
-## Features
+---
 
-- **SQL Lab:** A full-featured interactive SQL editor based on CodeMirror.
-- **Views:** Define standard virtual tables and trace their execution.
-- **Materialized Views:** Create persisted views and observe staleness when base tables update.
-- **Dependency Graph:** A live, interactive DAG (Directed Acyclic Graph) visualization of table and view relationships.
-- **Query X-Ray:** Step-by-step query execution planner to understand performance implications.
-- **Comparison Engine:** Side-by-side comparison of View vs Materialized View query results and states.
-- **Interactive Labs:** Step-by-step gamified tutorials to teach you SQL concepts.
-- **AI Assistant:** Context-aware, BYOK (Bring-Your-Own-Key) AI integration that understands your current database state and graph.
-- **BYOK AI Providers:** Configure OpenAI, Anthropic, or OpenAI-compatible endpoints directly in your browser.
-- **Theme Switching:** Dynamic Neumorphic UI with intelligent Light/Dark mode toggles.
+## 📚 DBMS Syllabus Mapping
 
-## Tech Stack
+- **Module**: DBMS Module 2 (Relational Model, Schema Definition, Views, Materialized Views, Invalidation Policies)
+- **Target Learning Objectives**:
+  - Understand the difference between Virtual Views vs. Materialized Views.
+  - Visualize execution cost: query re-computation vs. physical storage access.
+  - Trace state propagation: DML updates (`INSERT`/`UPDATE`/`DELETE`) $\to$ DAG edge traversal $\to$ `STALE` flagging.
+  - Perform manual snapshot synchronization via `REFRESH MATERIALIZED VIEW`.
 
-ViewLab is built strictly as a client-side application running completely in the browser for maximum performance and portability:
+---
 
-- **Framework:** React 18
-- **Build Tool:** Vite
-- **Database:** `sql.js` (SQLite compiled to WebAssembly)
-- **State Management:** Zustand (with local storage persistence)
-- **Editor:** CodeMirror 6 (with SQL language support)
-- **Graph Visualization:** ReactFlow
-- **Styling:** Tailwind CSS (Custom Neumorphic design system)
-- **Language:** TypeScript
+## ✨ Features
 
-## Getting Started
+- **⚡ In-Memory SQLite Engine**: Client-side execution powered by `sql.js` (SQLite compiled to WebAssembly).
+- **👁️ Virtual View Manager**: Create dynamic views with zero storage overhead; always returns current base table data.
+- **💾 Materialized View Manager**: Materialize query results as physical SQLite tables; tracks freshness and staleness.
+- **🕸️ Dependency Tracker DAG**: Interactive graph powered by ReactFlow showing real-time node statuses (`LIVE`, `FRESH`, `STALE`).
+- **🧪 Execution Simulator**: Animated step-by-step pipeline visualizing parsing, dependency extraction, query execution, and storage materialization.
+- **⚔️ View vs. MV Comparison View**: Side-by-side comparison of live virtual queries vs stored physical snapshots.
+- **🔬 4 Interactive Guided Labs**: Step-by-step challenges with auto-validation to master DDL, DML, and view refresh cycles.
+- **📚 12-Section Comprehensive Tutorial**: In-depth theoretical explanations, SVG diagrams, and interactive SQL triggers.
+- **📊 Export & Reports**: Download query results in CSV format, export execution logs, or generate markdown reports.
+- **🤖 Context-Aware AI Assistant**: Interactive database tutor with zero-config Mock mode or BYOK (OpenAI/Anthropic).
 
-Because ViewLab is fully client-side and relies on an in-memory WebAssembly SQLite database, no complex server setup is required. 
+---
+
+## 🛠️ Tech Stack
+
+- **Frontend**: React 18, TypeScript, Vite
+- **Styling**: Vanilla Tailwind CSS with custom CSS variable design system (Full Dark & Light mode support)
+- **Database Engine**: `sql.js` (WASM SQLite)
+- **State Management**: Zustand with `localStorage` persistence
+- **Graph Visualization**: ReactFlow
+- **Code Editor**: CodeMirror 6 with SQL syntax highlighting
+
+---
+
+## 🚀 Quick Start
 
 ```bash
-# 1. Clone the repository
-git clone <repository-url>
-cd viewlab
+# Clone the project repository
+cd ViewLab
 
-# 2. Install dependencies
+# Install dependencies
 npm install
 
-# 3. Start the development server
+# Start the Vite development server
 npm run dev
 ```
 
-Open `http://localhost:5173` in your browser. 
+Open `http://localhost:5173` in your browser.
 
-### AI Configuration (Optional)
-To use the built-in AI Assistant:
-1. Navigate to **System > Settings** in the application sidebar.
-2. Select your provider (OpenAI, Anthropic, or Custom).
-3. Input your API key. Keys are securely stored in your browser's local storage and are never sent to our servers (because there is no server!).
+---
 
-## License
+## 📖 Key Workflows to Try
 
-MIT
+1. **Create a View**:
+   ```sql
+   CREATE VIEW expensive_artworks AS 
+   SELECT * FROM ARTWORK WHERE price > 100000;
+   ```
+2. **Create a Materialized View**:
+   ```sql
+   CREATE MATERIALIZED VIEW expensive_artworks_mv AS 
+   SELECT * FROM ARTWORK WHERE price > 100000;
+   ```
+3. **Trigger Base Table DML**:
+   ```sql
+   UPDATE ARTWORK SET price = 150000 WHERE artwork_id = 3;
+   ```
+4. **Compare Query Results**:
+   - `SELECT * FROM expensive_artworks;` $\to$ Returns updated price ($150,000$).
+   - `SELECT * FROM expensive_artworks_mv;` $\to$ Returns old snapshot data (`STALE` state).
+5. **Refresh Materialized View**:
+   ```sql
+   REFRESH MATERIALIZED VIEW expensive_artworks_mv;
+   ```
+   - MV state updates back to `FRESH` and data reflects current base table rows.
+
+---
+
+## 📄 Documentation & Algorithm Details
+
+See [`ALGORITHMS.md`](file:///home/aadi/Projects/ViewLab/ALGORITHMS.md) for complete technical breakdowns of SQL parsing, DAG invalidation algorithms, and time/space complexity analysis.
+
+---
+
+## 📜 License
+
+MIT License

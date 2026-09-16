@@ -3,27 +3,46 @@
 @tailwind utilities;
 
 @layer base {
-.light {
+  .light {
     --background: 0 0% 98%;
     --foreground: 220 20% 12%;
-    --card: 0 0% 96%;
+    --card: 0 0% 100%;
     --card-foreground: 220 20% 12%;
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
+    --border: 220 13% 87%;
+    --input: 220 13% 87%;
     --ring: 263 70% 50%;
-    --muted: 0 0% 92%;
-    --muted-foreground: 220 20% 45%;
+    --muted: 220 14% 93%;
+    --muted-foreground: 220 9% 46%;
     --primary: 263 70% 50%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 0 0% 90%;
+    --secondary: 220 14% 93%;
     --secondary-foreground: 220 20% 12%;
-    
-    --shadow-dark: rgba(0, 0, 0, 0.1);
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --accent: 220 14% 93%;
+    --accent-foreground: 220 20% 12%;
+
+    /* Semantic Colors for DB Objects */
+    --color-live: 199 89% 48%;
+    --color-table: 215 100% 50%;
+    --color-view: 263 70% 55%;
+    --color-mv: 142 70% 40%;
+
+    /* Semantic Colors for Status */
+    --color-stale: 35 100% 50%;
+    --color-fresh: 142 70% 40%;
+    --color-refreshing: 199 89% 48%;
+    --color-success: 142 70% 40%;
+    --color-error: 0 84% 55%;
+    --color-warning: 35 100% 50%;
+    --color-info: 199 89% 48%;
+
+    --shadow-dark: rgba(0, 0, 0, 0.08);
     --shadow-light: rgba(255, 255, 255, 1);
-}
+  }
 
   :root {
-    --background: 220 20% 12%; 
+    --background: 220 20% 12%;
     --foreground: 210 40% 98%;
     --card: 220 20% 14%;
     --card-foreground: 210 40% 98%;
@@ -37,24 +56,27 @@
     --secondary: 220 20% 24%;
     --secondary-foreground: 210 40% 98%;
     --destructive: 0 84% 60%;
-    
+    --destructive-foreground: 210 40% 98%;
+    --accent: 220 20% 20%;
+    --accent-foreground: 210 40% 98%;
+
     /* Semantic Colors for DB Objects */
-    --color-live: 199 89% 48%; /* Blue */
-    --color-table: 215 100% 65%; /* Soft Blue */
-    --color-view: 270 70% 60%; /* Purple */
-    --color-mv: 142 70% 45%; /* Green */
-    
+    --color-live: 199 89% 48%;
+    --color-table: 215 100% 65%;
+    --color-view: 270 70% 60%;
+    --color-mv: 142 70% 45%;
+
     /* Semantic Colors for Status */
-    --color-stale: 35 100% 50%; /* Orange */
-    --color-fresh: 142 70% 45%; /* Green */
-    --color-refreshing: 199 89% 48%; /* Blue */
+    --color-stale: 35 100% 50%;
+    --color-fresh: 142 70% 45%;
+    --color-refreshing: 199 89% 48%;
     --color-success: 142 70% 45%;
     --color-error: 0 84% 60%;
     --color-warning: 35 100% 50%;
     --color-info: 199 89% 48%;
+
     --shadow-dark: rgba(0, 0, 0, 0.4);
     --shadow-light: rgba(255, 255, 255, 0.03);
-
   }
 
   body {
@@ -65,55 +87,62 @@
 
 @layer utilities {
   .neo-surface {
-    @apply bg-card border-none;
-    box-shadow: 
+    @apply bg-card border border-border/20;
+    box-shadow:
       8px 8px 16px var(--shadow-dark),
       -8px -8px 16px var(--shadow-light);
     border-radius: 12px;
   }
-  
+
   .neo-surface-inset {
-    @apply bg-muted border-none;
-    box-shadow: 
+    @apply bg-muted border border-border/20;
+    box-shadow:
       inset 4px 4px 8px var(--shadow-dark),
       inset -4px -4px 8px var(--shadow-light);
     border-radius: 12px;
   }
-  
+
   .neo-button {
-    @apply transition-all duration-200 active:scale-95 bg-card border-none text-foreground font-medium flex items-center justify-center;
-    box-shadow: 
+    @apply transition-all duration-200 active:scale-95 bg-card border border-border/20 text-foreground font-medium flex items-center justify-center;
+    box-shadow:
       4px 4px 8px var(--shadow-dark),
       -4px -4px 8px var(--shadow-light);
     border-radius: 8px;
   }
-  
+
   .neo-button:hover {
-    box-shadow: 
+    box-shadow:
       6px 6px 12px var(--shadow-dark),
       -6px -6px 12px var(--shadow-light);
   }
-  
+
   .neo-button:active {
-    box-shadow: 
+    box-shadow:
       inset 4px 4px 8px var(--shadow-dark),
       inset -4px -4px 8px var(--shadow-light);
   }
 
   .neo-button-primary {
-    @apply neo-button bg-primary text-primary-foreground;
-    box-shadow: 
-      4px 4px 10px rgba(139, 92, 246, 0.4),
-      -4px -4px 10px rgba(255, 255, 255, 0.05);
+    @apply neo-button bg-primary text-primary-foreground border-primary/30;
+    box-shadow:
+      4px 4px 10px hsl(var(--primary) / 0.3),
+      -4px -4px 10px var(--shadow-light);
   }
-  
+
+  .neo-button-primary:hover {
+    box-shadow:
+      6px 6px 14px hsl(var(--primary) / 0.4),
+      -6px -6px 14px var(--shadow-light);
+  }
+
   .neo-button-primary:active {
-    box-shadow: 
+    box-shadow:
       inset 4px 4px 8px var(--shadow-dark),
       inset -4px -4px 8px var(--shadow-light);
   }
 }
 
+/* CodeMirror editor */
 .cm-editor {
   @apply bg-background border border-input rounded-lg;
   height: 100%;
@@ -137,6 +166,7 @@
   @apply bg-primary/20;
 }
 
+/* React Flow */
 .react-flow__node {
   @apply bg-card border border-border rounded-lg px-3 py-2 text-sm font-medium;
 }
@@ -156,6 +186,7 @@
   @apply bg-primary;
 }
 
+/* Result Grid */
 .result-grid {
   @apply w-full border-collapse text-sm;
 }
@@ -175,31 +206,90 @@
 .result-grid tr:last-child td {
   @apply border-b-0;
 }
-@layer utilities {
-  .neo-surface {
-    @apply bg-background border border-white/5;
-    box-shadow: 
-      8px 8px 16px rgba(0, 0, 0, 0.4),
-      -8px -8px 16px rgba(255, 255, 255, 0.05);
+
+/* Simulation Animations */
+@keyframes flowPulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes dataFlow {
+  0% { stroke-dashoffset: 24; }
+  100% { stroke-dashoffset: 0; }
+}
+
+@keyframes refreshSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes staleFlash {
+  0%, 100% { box-shadow: 0 0 0 0 hsl(var(--color-stale) / 0); }
+  50% { box-shadow: 0 0 16px 4px hsl(var(--color-stale) / 0.4); }
+}
+
+.animate-flow-pulse {
+  animation: flowPulse 2s ease-in-out infinite;
+}
+
+.animate-slide-down {
+  animation: slideDown 0.4s ease-out forwards;
+}
+
+.animate-fade-in-scale {
+  animation: fadeInScale 0.3s ease-out forwards;
+}
+
+.animate-data-flow {
+  stroke-dasharray: 8 4;
+  animation: dataFlow 0.8s linear infinite;
+}
+
+.animate-refresh-spin {
+  animation: refreshSpin 1s linear infinite;
+}
+
+.animate-stale-flash {
+  animation: staleFlash 2s ease-in-out infinite;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Print-friendly export */
+@media print {
+  .no-print {
+    display: none !important;
   }
-  
-  .neo-surface-inset {
-    @apply bg-background border border-white/5;
-    box-shadow: 
-      inset 6px 6px 12px rgba(0, 0, 0, 0.4),
-      inset -6px -6px 12px rgba(255, 255, 255, 0.05);
-  }
-  
-  .neo-button {
-    @apply transition-all duration-200 active:scale-95;
-    box-shadow: 
-      4px 4px 8px rgba(0, 0, 0, 0.3),
-      -4px -4px 8px rgba(255, 255, 255, 0.05);
-  }
-  
-  .neo-button:active {
-    box-shadow: 
-      inset 4px 4px 8px rgba(0, 0, 0, 0.3),
-      inset -4px -4px 8px rgba(255, 255, 255, 0.05);
+
+  body {
+    background: white !important;
+    color: black !important;
   }
 }

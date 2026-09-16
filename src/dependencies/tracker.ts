@@ -15,11 +15,11 @@ export class DependencyTracker {
     return extractDependencies(definition, existingViews, existingMVs);
   }
 
-  registerView(name: string, type: 'view' | 'materialized-view', dependencies: string[]): void {
+  registerView(name: string, type: 'table' | 'view' | 'materialized-view', dependencies: string[]): void {
     const node: DependencyNode = {
       id: name,
       name,
-      type: type === 'view' ? 'view' : 'materialized-view',
+      type: type,
     };
 
     const existingIndex = this.graph.nodes.findIndex(n => n.id === name);
