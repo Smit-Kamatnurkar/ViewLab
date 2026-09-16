@@ -8,12 +8,12 @@ export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
   ({ className = '', variant = 'default', children, ...props }, ref) => {
     const variants = {
       default: 'border-transparent bg-muted text-muted-foreground',
-      fresh: 'border-green-500/30 bg-green-500/10 text-green-400',
-      stale: 'border-orange-500/30 bg-orange-500/10 text-orange-400',
-      live: 'border-blue-500/30 bg-blue-500/10 text-blue-400',
-      error: 'border-red-500/30 bg-red-500/10 text-red-400',
-      running: 'border-yellow-500/30 bg-yellow-500/10 text-yellow-400',
-      success: 'border-green-500/30 bg-green-500/10 text-green-400',
+      fresh: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
+      stale: 'border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400',
+      live: 'border-indigo-500/30 bg-indigo-500/10 text-indigo-700 dark:text-indigo-400',
+      error: 'border-rose-500/30 bg-rose-500/10 text-rose-700 dark:text-rose-400',
+      running: 'border-blue-500/30 bg-blue-500/10 text-blue-700 dark:text-blue-400',
+      success: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
     };
 
     return (

@@ -50,25 +50,30 @@ export function Sidebar() {
   const staleCount = Array.from(mvManager.getAllViews().values()).filter(mv => mv.status === 'STALE').length;
 
   return (
-    <div className="flex flex-col h-full w-64 neo-surface rounded-none border-r border-border/10 overflow-hidden z-10">
-      <div className="flex items-center h-16 px-6 mb-4">
-        <h1 className="text-xl font-bold tracking-tight bg-gradient-to-br from-primary to-primary/60 bg-clip-text text-transparent">ViewLab</h1>
+    <div className="flex flex-col h-full w-64 bg-card text-card-foreground border-r border-border overflow-hidden z-10 shadow-sm transition-colors duration-200">
+      <div className="flex items-center h-16 px-6 mb-2 border-b border-border/40">
+        <div className="flex items-center gap-2">
+          <div className="w-7 h-7 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm shadow-sm">
+            V
+          </div>
+          <h1 className="text-xl font-bold tracking-tight text-foreground">ViewLab</h1>
+        </div>
       </div>
 
-      <nav className="flex-1 px-4 space-y-6 overflow-y-auto pb-4 pt-2">
+      <nav className="flex-1 px-3 space-y-5 overflow-y-auto pb-4 pt-3">
         {navGroups.map((group) => (
           <div key={group.name} className="space-y-1">
-            <h4 className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{group.name}</h4>
+            <h4 className="px-3 text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{group.name}</h4>
             {group.items.map((item) => {
               const isActive = activePage === item.id;
               return (
                 <button
                   key={item.id}
                   onClick={() => setUI({ activePage: item.id })}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                     isActive
-                      ? 'neo-surface-inset text-primary bg-primary/5'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-accent/50'
+                      ? 'bg-primary/10 text-primary font-semibold border border-primary/20 shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
                   }`}
                 >
                   <div className={isActive ? 'text-primary' : 'text-muted-foreground'}>
@@ -76,10 +81,10 @@ export function Sidebar() {
                   </div>
                   <span className="flex-1 text-left">{item.label}</span>
                   {item.id === 'history' && history.length > 0 && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground">{history.length}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-mono">{history.length}</span>
                   )}
                   {item.id === 'compare' && staleCount > 0 && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-orange-500/20 text-orange-400">{staleCount}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-500 font-bold">{staleCount}</span>
                   )}
                 </button>
               );
@@ -88,26 +93,36 @@ export function Sidebar() {
         ))}
       </nav>
 
-      
-      <div className="p-4 mt-auto">
-        <div className="flex gap-2 mb-4 bg-muted/30 p-1 rounded-lg">
+      <div className="p-3 border-t border-border/40 space-y-3 bg-muted/20">
+        {/* Theme Toggle Controls */}
+        <div className="flex gap-1 bg-muted/60 p-1 rounded-lg border border-border/50">
           <button
             onClick={() => setUI({ theme: 'light' })}
-            className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${ui.theme === 'light' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+            title="Switch to Light Theme"
+            className={`flex-1 py-1.5 px-2 text-xs font-semibold rounded-md transition-all flex items-center justify-center gap-1.5 ${
+              ui.theme === 'light'
+                ? 'bg-card text-foreground shadow-sm border border-border/50'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
           >
-            ☀ Light
+            <span>☀</span> Light
           </button>
           <button
             onClick={() => setUI({ theme: 'dark' })}
-            className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all ${ui.theme === 'dark' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+            title="Switch to Dark Theme"
+            className={`flex-1 py-1.5 px-2 text-xs font-semibold rounded-md transition-all flex items-center justify-center gap-1.5 ${
+              ui.theme === 'dark'
+                ? 'bg-card text-foreground shadow-sm border border-border/50'
+                : 'text-muted-foreground hover:text-foreground'
+            }`}
           >
-            🌙 Dark
+            <span>🌙</span> Dark
           </button>
         </div>
+
         <button 
- 
           onClick={() => document.dispatchEvent(new CustomEvent('toggle-ai'))}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 neo-button text-sm font-semibold text-primary"
+          className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-card border border-border hover:bg-muted text-primary text-sm font-semibold rounded-lg shadow-sm transition-all"
         >
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>

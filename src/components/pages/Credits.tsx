@@ -44,7 +44,7 @@ function CreditCard({ name, role, contribution }: { name: string, role: string, 
         <h3 className="text-xl font-bold">{name}</h3>
         <p className="text-sm font-semibold text-primary uppercase tracking-wider">{role}</p>
       </div>
-      <p className="text-sm text-muted-foreground pt-4 border-t border-white/5 w-full">
+      <p className="text-sm text-muted-foreground pt-4 border-t border-border/50 w-full">
         {contribution}
       </p>
     </div>

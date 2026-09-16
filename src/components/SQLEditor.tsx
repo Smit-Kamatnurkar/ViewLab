@@ -219,8 +219,8 @@ export function SQLEditor() {
 
       {/* Modal 1: Reset Database Confirmation */}
       {showResetConfirm && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="neo-surface p-6 rounded-2xl max-w-md w-full space-y-4 shadow-2xl border border-primary/20 bg-background text-foreground">
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="neo-surface p-6 rounded-2xl max-w-md w-full space-y-4 shadow-2xl border border-primary/20 bg-card text-card-foreground">
             <h3 className="text-lg font-bold">Reset Database?</h3>
             <p className="text-sm text-muted-foreground">
               This action will permanently remove all user-created Views, Materialized Views, and custom table row modifications, restoring initial seed data.
@@ -239,9 +239,9 @@ export function SQLEditor() {
 
       {/* Modal 2: Duplicate View Conflict Handling */}
       {duplicateViewConflict && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="neo-surface p-6 rounded-2xl max-w-lg w-full space-y-4 shadow-2xl border border-primary/20 bg-background text-foreground">
-            <div className="flex items-center gap-2 text-orange-400 font-bold text-base">
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="neo-surface p-6 rounded-2xl max-w-lg w-full space-y-4 shadow-2xl border border-primary/20 bg-card text-card-foreground">
+            <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold text-base">
               <span>⚠️</span>
               <h3>View Already Exists</h3>
             </div>

@@ -19,8 +19,8 @@ interface DependencyGraphViewProps {
 
 function TableNode({ data }: NodeProps<{ label: string }>) {
   return (
-    <div className="px-3 py-2 bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-400 text-sm font-medium">
-      <div className="flex items-center gap-1">
+    <div className="px-3 py-2 bg-blue-500/10 border border-blue-500/30 rounded-lg text-blue-700 dark:text-blue-400 text-sm font-semibold shadow-sm">
+      <div className="flex items-center gap-1.5">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
           <polyline points="14 2 14 8 20 8" />
@@ -36,8 +36,8 @@ function TableNode({ data }: NodeProps<{ label: string }>) {
 
 function ViewNode({ data }: NodeProps<{ label: string }>) {
   return (
-    <div className="px-3 py-2 bg-purple-500/10 border border-purple-500/30 rounded-lg text-purple-400 text-sm font-medium">
-      <div className="flex items-center gap-1">
+    <div className="px-3 py-2 bg-purple-500/10 border border-purple-500/30 rounded-lg text-purple-700 dark:text-purple-400 text-sm font-semibold shadow-sm">
+      <div className="flex items-center gap-1.5">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
           <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
           <circle cx="12" cy="12" r="3" />
@@ -50,8 +50,15 @@ function ViewNode({ data }: NodeProps<{ label: string }>) {
 
 function MaterializedViewNode({ data }: NodeProps<{ label: string; status?: 'FRESH' | 'STALE' }>) {
   const status = data.status || 'FRESH';
+  const isFresh = status === 'FRESH';
   return (
-    <div className={`px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-1 ${status === 'FRESH' ? 'bg-green-500/10 border border-green-500/30 text-green-400' : 'bg-orange-500/10 border border-orange-500/30 text-orange-400'}`}>
+    <div
+      className={`px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 border shadow-sm ${
+        isFresh
+          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-700 dark:text-emerald-400'
+          : 'bg-amber-500/10 border-amber-500/30 text-amber-700 dark:text-amber-400'
+      }`}
+    >
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <ellipse cx="12" cy="6" rx="6" ry="3" />
         <path d="M6 6v12" />
@@ -59,7 +66,13 @@ function MaterializedViewNode({ data }: NodeProps<{ label: string; status?: 'FRE
         <ellipse cx="12" cy="18" rx="6" ry="3" />
       </svg>
       <span>{data.label}</span>
-      <span className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-semibold ${status === 'FRESH' ? 'border-green-500/30 bg-green-500/10 text-green-400' : 'border-orange-500/30 bg-orange-500/10 text-orange-400'}`}>
+      <span
+        className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-bold ${
+          isFresh
+            ? 'border-emerald-500/30 bg-emerald-500/20 text-emerald-800 dark:text-emerald-300'
+            : 'border-amber-500/30 bg-amber-500/20 text-amber-800 dark:text-amber-300'
+        }`}
+      >
         {status}
       </span>
     </div>

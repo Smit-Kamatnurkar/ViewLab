@@ -93,11 +93,19 @@ interface AppStore {
   importState: (json: string) => void;
 }
 
+const getInitialTheme = (): 'dark' | 'light' => {
+  try {
+    const saved = localStorage.getItem('viewlab-theme');
+    if (saved === 'dark' || saved === 'light') return saved;
+  } catch (e) {}
+  return 'dark';
+};
+
 const initialUIState: UIState = {
   sidebarOpen: true,
   sidebarTab: 'database',
   learnMode: true,
-  theme: 'dark',
+  theme: getInitialTheme(),
   activePanel: 'editor',
   activePage: 'overview',
   splitRatio: 50,
@@ -199,9 +207,15 @@ export const useStore = create<AppStore>()(
         })),
 
       setUI: (ui) =>
-        set((state) => ({
-          ui: { ...state.ui, ...ui },
-        })),
+        set((state) => {
+          const updatedUI = { ...state.ui, ...ui };
+          if (ui.theme) {
+            try {
+              localStorage.setItem('viewlab-theme', ui.theme);
+            } catch (e) {}
+          }
+          return { ui: updatedUI };
+        }),
 
       selectedView: null,
       selectedGraphNode: null,

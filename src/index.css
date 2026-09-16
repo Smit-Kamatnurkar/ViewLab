@@ -3,148 +3,122 @@
 @tailwind utilities;
 
 @layer base {
-  .light {
-    --background: 0 0% 98%;
-    --foreground: 220 20% 12%;
-    --card: 0 0% 100%;
-    --card-foreground: 220 20% 12%;
-    --border: 220 13% 87%;
-    --input: 220 13% 87%;
-    --ring: 263 70% 50%;
-    --muted: 220 14% 93%;
-    --muted-foreground: 220 9% 46%;
-    --primary: 263 70% 50%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 220 14% 93%;
-    --secondary-foreground: 220 20% 12%;
-    --destructive: 0 84% 60%;
+  /* LIGHT THEME (Default when .light or no .dark) */
+  :root, .light {
+    --background: 210 40% 98%;          /* Clean slate light background #F8FAFC */
+    --foreground: 222.2 84% 4.9%;       /* Slate 950 deep readable text #020817 */
+    --card: 0 0% 100%;                  /* Crisp white card #FFFFFF */
+    --card-foreground: 222.2 84% 4.9%;  /* Deep readable text */
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --border: 214.3 31.8% 91.4%;        /* Slate 200 clean border #E2E8F0 */
+    --input: 214.3 31.8% 91.4%;
+    --ring: 243 75% 59%;                /* Indigo 600 accent #4F46E5 */
+    --muted: 210 40% 96.1%;             /* Slate 100 muted surface #F1F5F9 */
+    --muted-foreground: 215.4 16.3% 46.9%; /* Slate 500 muted text #64748B */
+    --primary: 243 75% 59%;             /* Indigo 600 primary accent #4F46E5 */
+    --primary-foreground: 0 0% 100%;    /* White text on primary */
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --accent: 220 14% 93%;
-    --accent-foreground: 220 20% 12%;
+    --accent: 243 75% 59%;
+    --accent-foreground: 0 0% 100%;
 
-    /* Semantic Colors for DB Objects */
-    --color-live: 199 89% 48%;
-    --color-table: 215 100% 50%;
+    /* Semantic DB & Status Colors */
+    --color-live: 243 75% 59%;
+    --color-table: 217 91% 60%;
     --color-view: 263 70% 55%;
-    --color-mv: 142 70% 40%;
+    --color-mv: 142 71% 45%;
+    --color-stale: 38 92% 50%;
+    --color-fresh: 142 71% 45%;
+    --color-refreshing: 217 91% 60%;
+    --color-success: 142 71% 45%;
+    --color-error: 0 84% 60%;
+    --color-warning: 38 92% 50%;
+    --color-info: 217 91% 60%;
 
-    /* Semantic Colors for Status */
-    --color-stale: 35 100% 50%;
-    --color-fresh: 142 70% 40%;
-    --color-refreshing: 199 89% 48%;
-    --color-success: 142 70% 40%;
-    --color-error: 0 84% 55%;
-    --color-warning: 35 100% 50%;
-    --color-info: 199 89% 48%;
-
-    --shadow-dark: rgba(0, 0, 0, 0.08);
-    --shadow-light: rgba(255, 255, 255, 1);
+    --shadow-dark: rgba(0, 0, 0, 0.05);
+    --shadow-light: rgba(255, 255, 255, 0.8);
   }
 
-  :root {
-    --background: 220 20% 12%;
-    --foreground: 210 40% 98%;
-    --card: 220 20% 14%;
+  /* DARK THEME (.dark) */
+  .dark {
+    --background: 224 71% 4%;           /* Near-black neutral #090D16 */
+    --foreground: 210 40% 98%;          /* High contrast off-white #F8FAFC */
+    --card: 222 47% 9%;                 /* Dark neutral surface #131924 */
     --card-foreground: 210 40% 98%;
-    --border: 220 20% 20%;
-    --input: 220 20% 18%;
-    --ring: 263 70% 50%;
-    --muted: 220 20% 18%;
-    --muted-foreground: 215 20% 65%;
-    --primary: 263 70% 60%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 220 20% 24%;
+    --popover: 222 47% 9%;
+    --popover-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;        /* Slate 800 subtle border #243044 */
+    --input: 217.2 32.6% 17.5%;
+    --ring: 243 75% 64%;                /* Indigo 500 accent #6366F1 */
+    --muted: 217.2 32.6% 13%;           /* Neutral muted surface */
+    --muted-foreground: 215 20.2% 65.1%; /* Slate 400 muted text #94A3B8 */
+    --primary: 243 75% 64%;             /* Indigo 500 primary accent #6366F1 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
-    --destructive: 0 84% 60%;
+    --destructive: 0 62.8% 50.6%;
     --destructive-foreground: 210 40% 98%;
-    --accent: 220 20% 20%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 243 75% 64%;
+    --accent-foreground: 0 0% 100%;
 
-    /* Semantic Colors for DB Objects */
-    --color-live: 199 89% 48%;
-    --color-table: 215 100% 65%;
+    /* Semantic DB & Status Colors */
+    --color-live: 243 75% 64%;
+    --color-table: 217 91% 65%;
     --color-view: 270 70% 60%;
     --color-mv: 142 70% 45%;
-
-    /* Semantic Colors for Status */
-    --color-stale: 35 100% 50%;
+    --color-stale: 38 92% 50%;
     --color-fresh: 142 70% 45%;
-    --color-refreshing: 199 89% 48%;
+    --color-refreshing: 217 91% 65%;
     --color-success: 142 70% 45%;
     --color-error: 0 84% 60%;
-    --color-warning: 35 100% 50%;
-    --color-info: 199 89% 48%;
+    --color-warning: 38 92% 50%;
+    --color-info: 217 91% 65%;
 
     --shadow-dark: rgba(0, 0, 0, 0.4);
-    --shadow-light: rgba(255, 255, 255, 0.03);
+    --shadow-light: rgba(255, 255, 255, 0.02);
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-foreground antialiased transition-colors duration-200;
     background-color: hsl(var(--background));
   }
 }
 
 @layer utilities {
   .neo-surface {
-    @apply bg-card border border-border/20;
-    box-shadow:
-      8px 8px 16px var(--shadow-dark),
-      -8px -8px 16px var(--shadow-light);
+    @apply bg-card border border-border shadow-sm text-card-foreground transition-colors duration-200;
     border-radius: 12px;
   }
 
   .neo-surface-inset {
-    @apply bg-muted border border-border/20;
-    box-shadow:
-      inset 4px 4px 8px var(--shadow-dark),
-      inset -4px -4px 8px var(--shadow-light);
+    @apply bg-muted/60 border border-border/60 text-foreground transition-colors duration-200;
     border-radius: 12px;
   }
 
   .neo-button {
-    @apply transition-all duration-200 active:scale-95 bg-card border border-border/20 text-foreground font-medium flex items-center justify-center;
-    box-shadow:
-      4px 4px 8px var(--shadow-dark),
-      -4px -4px 8px var(--shadow-light);
+    @apply transition-all duration-200 active:scale-95 bg-card border border-border text-foreground font-medium flex items-center justify-center shadow-sm;
     border-radius: 8px;
   }
 
   .neo-button:hover {
-    box-shadow:
-      6px 6px 12px var(--shadow-dark),
-      -6px -6px 12px var(--shadow-light);
-  }
-
-  .neo-button:active {
-    box-shadow:
-      inset 4px 4px 8px var(--shadow-dark),
-      inset -4px -4px 8px var(--shadow-light);
+    @apply bg-muted/80 border-primary/40 text-primary;
   }
 
   .neo-button-primary {
-    @apply neo-button bg-primary text-primary-foreground border-primary/30;
-    box-shadow:
-      4px 4px 10px hsl(var(--primary) / 0.3),
-      -4px -4px 10px var(--shadow-light);
+    @apply neo-button bg-primary text-primary-foreground border-primary/30 shadow-md;
   }
 
   .neo-button-primary:hover {
-    box-shadow:
-      6px 6px 14px hsl(var(--primary) / 0.4),
-      -6px -6px 14px var(--shadow-light);
-  }
-
-  .neo-button-primary:active {
-    box-shadow:
-      inset 4px 4px 8px var(--shadow-dark),
-      inset -4px -4px 8px var(--shadow-light);
+    @apply bg-primary/90 text-primary-foreground;
   }
 }
 
-/* CodeMirror editor */
+/* CodeMirror editor styling */
 .cm-editor {
-  @apply bg-background border border-input rounded-lg;
+  @apply bg-card text-foreground border border-border rounded-lg transition-colors duration-200;
   height: 100%;
 }
 
@@ -152,23 +126,33 @@
   font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
   font-size: 13px !important;
   line-height: 1.6 !important;
+  color: inherit !important;
 }
 
 .cm-gutters {
-  @apply bg-muted/50 border-r border-border;
+  @apply bg-muted/60 border-r border-border text-muted-foreground;
 }
 
 .cm-activeLineGutter {
-  @apply bg-accent;
+  @apply bg-accent/20 text-foreground font-bold;
+}
+
+.cm-lineNumbers .cm-gutterElement {
+  color: inherit;
+  opacity: 0.7;
+}
+
+.cm-activeLine {
+  @apply bg-muted/30;
 }
 
 .cm-selectionMatch {
   @apply bg-primary/20;
 }
 
-/* React Flow */
+/* React Flow styling */
 .react-flow__node {
-  @apply bg-card border border-border rounded-lg px-3 py-2 text-sm font-medium;
+  @apply bg-card border border-border rounded-lg px-3 py-2 text-sm font-medium text-foreground shadow-sm transition-colors duration-200;
 }
 
 .react-flow__edge-path {
@@ -182,25 +166,33 @@
   height: 10px;
 }
 
-.react-flow__handle.connecting {
-  @apply bg-primary;
+.react-flow__controls {
+  @apply bg-card border border-border text-foreground rounded-lg shadow-md overflow-hidden;
+}
+
+.react-flow__controls-button {
+  @apply bg-card border-b border-border text-foreground hover:bg-muted/80;
+}
+
+.react-flow__minimap {
+  @apply bg-card border border-border rounded-lg shadow-md;
 }
 
 /* Result Grid */
 .result-grid {
-  @apply w-full border-collapse text-sm;
+  @apply w-full border-collapse text-sm text-foreground;
 }
 
 .result-grid th {
-  @apply text-left p-2 border-b border-border font-medium text-muted-foreground bg-muted/50 sticky top-0 z-10;
+  @apply text-left p-2 border-b border-border font-medium text-muted-foreground bg-muted/60 sticky top-0 z-10;
 }
 
 .result-grid td {
-  @apply p-2 border-b border-border/50;
+  @apply p-2 border-b border-border/50 text-foreground;
 }
 
 .result-grid tr:hover td {
-  @apply bg-accent/50;
+  @apply bg-muted/40;
 }
 
 .result-grid tr:last-child td {

@@ -70,15 +70,15 @@ export function HistoryPage() {
               }[entry.status];
 
               const opColors: Record<string, string> = {
-                SELECT: 'text-blue-400',
-                INSERT: 'text-green-400',
-                UPDATE: 'text-orange-400',
-                DELETE: 'text-red-400',
-                CREATE_VIEW: 'text-purple-400',
-                CREATE_MATERIALIZED_VIEW: 'text-emerald-400',
-                DROP_VIEW: 'text-red-400',
-                DROP_MATERIALIZED_VIEW: 'text-red-400',
-                REFRESH_MATERIALIZED_VIEW: 'text-blue-400',
+                SELECT: 'text-blue-600 dark:text-blue-400',
+                INSERT: 'text-emerald-600 dark:text-emerald-400',
+                UPDATE: 'text-amber-600 dark:text-amber-400',
+                DELETE: 'text-rose-600 dark:text-rose-400',
+                CREATE_VIEW: 'text-purple-600 dark:text-purple-400',
+                CREATE_MATERIALIZED_VIEW: 'text-emerald-600 dark:text-emerald-400',
+                DROP_VIEW: 'text-rose-600 dark:text-rose-400',
+                DROP_MATERIALIZED_VIEW: 'text-rose-600 dark:text-rose-400',
+                REFRESH_MATERIALIZED_VIEW: 'text-blue-600 dark:text-blue-400',
               };
 
               return (
@@ -91,17 +91,17 @@ export function HistoryPage() {
                           {entry.operation.replace(/_/g, ' ')}
                         </span>
                         <span className="text-xs text-muted-foreground">on</span>
-                        <span className="text-xs font-mono text-primary">{entry.object}</span>
-                        <span className="text-xs text-muted-foreground ml-auto">
+                        <span className="text-xs font-mono text-primary font-bold">{entry.object}</span>
+                        <span className="text-xs text-muted-foreground ml-auto font-mono">
                           {new Date(entry.timestamp).toLocaleTimeString()}
                         </span>
                       </div>
                       {entry.sql && (
-                        <pre className="text-xs font-mono text-muted-foreground bg-muted/30 p-2 rounded mt-1 max-h-16 overflow-hidden whitespace-pre-wrap">
+                        <pre className="text-xs font-mono text-foreground bg-muted/50 p-2 rounded mt-1 max-h-16 overflow-hidden whitespace-pre-wrap border border-border/40">
                           {entry.sql}
                         </pre>
                       )}
-                      <div className="flex items-center gap-3 mt-2 text-[11px] text-muted-foreground">
+                      <div className="flex items-center gap-3 mt-2 text-[11px] text-muted-foreground font-mono">
                         {entry.executionTime != null && (
                           <span>⏱ {entry.executionTime.toFixed(1)}ms</span>
                         )}
@@ -109,7 +109,7 @@ export function HistoryPage() {
                           <span>📊 {entry.rowsAffected} rows</span>
                         )}
                         {entry.details && (
-                          <span className="text-red-400 truncate max-w-xs">{entry.details}</span>
+                          <span className="text-rose-600 dark:text-rose-400 font-semibold truncate max-w-xs">{entry.details}</span>
                         )}
                       </div>
                     </div>
