@@ -12,11 +12,12 @@ import { Settings } from './components/pages/Settings';
 import { LearnPage } from './components/pages/LearnPage';
 import { HistoryPage } from './components/pages/HistoryPage';
 import { UseCasesPage } from './components/pages/UseCasesPage';
+import { SqlLabWorkspace } from './components/workspace/SqlLabWorkspace';
+import { SimulatorWorkspace } from './components/workspace/SimulatorWorkspace';
+import { DependenciesWorkspace } from './components/workspace/DependenciesWorkspace';
+import { CompareWorkspace } from './components/workspace/CompareWorkspace';
+import { QueryXRayWorkspace } from './components/workspace/QueryXRayWorkspace';
 import { SQLEditor } from './components/SQLEditor';
-import { DependencyGraphView } from './components/DependencyGraph';
-import { ExecutionFlowView } from './components/ExecutionFlowView';
-import { ComparisonView } from './components/ComparisonView';
-import { SimulationView } from './components/SimulationView';
 import { LabsPanel } from './components/layout/LabsPanel';
 import { AIAssistant } from './components/AIAssistant';
 import { LearnModePanel } from './components/LearnMode';
@@ -26,9 +27,7 @@ export default function App() {
   const {
     db, initError,
     ui, setDb, refreshSchema,
-    setInitialized, setInitializing, setInitError,
-    viewManager, mvManager, dependencyTracker,
-    selectedView, lastResult
+    setInitialized, setInitializing, setInitError
   } = useStore(useShallow(state => ({
     db: state.db,
     initError: state.initError,
@@ -38,14 +37,8 @@ export default function App() {
     setInitialized: state.setInitialized,
     setInitializing: state.setInitializing,
     setInitError: state.setInitError,
-    viewManager: state.viewManager,
-    mvManager: state.mvManager,
-    dependencyTracker: state.dependencyTracker,
-    selectedView: state.selectedView,
-    lastResult: state.lastResult,
   })));
 
-  
   useEffect(() => {
     if (ui.theme === 'light') {
       document.documentElement.classList.add('light');
@@ -130,103 +123,30 @@ export default function App() {
 
   const activePage = ui.activePage || 'overview';
 
-  const buildExecutionFlow = () => {
-    const selectedNormalView = selectedView ? viewManager.getView(selectedView) : null;
-    const selectedMV = selectedView ? mvManager.getView(selectedView) : null;
-
-    if (selectedNormalView) {
-      return {
-        type: 'view' as const,
-        steps: [
-          { label: 'SQL Query', description: 'SELECT * FROM ' + selectedNormalView.name, status: 'complete' as const },
-          { label: 'View Definition', description: selectedNormalView.definition, status: 'complete' as const },
-          { label: 'Base Tables', description: selectedNormalView.dependencies.join(', '), status: 'complete' as const },
-          { label: 'Query Execution', description: 'Execute against current database state', status: 'complete' as const },
-          { label: 'Current Result', description: 'Returns live, up-to-date data', status: 'complete' as const },
-        ],
-      };
-    }
-    if (selectedMV) {
-      if (selectedMV.status === 'STALE') {
-        return {
-          type: 'materialized-view' as const,
-          steps: [
-            { label: 'SQL Query', description: 'SELECT * FROM ' + selectedMV.name, status: 'complete' as const },
-            { label: 'Materialized Result', description: 'Read from stored result (Table SCAN)', status: 'complete' as const },
-            { label: 'Stored Result', description: (selectedMV.result?.rowCount ?? 0) + ' rows (from last refresh)', status: 'complete' as const },
-            { label: 'Status', description: 'STALE - base tables have changed since last refresh', status: 'complete' as const },
-          ],
-        };
-      }
-      return {
-        type: 'materialized-view' as const,
-        steps: [
-          { label: 'SQL Query', description: 'SELECT * FROM ' + selectedMV.name, status: 'complete' as const },
-          { label: 'Materialized Result', description: 'Read from stored result (Table SCAN)', status: 'complete' as const },
-          { label: 'Stored Result', description: (selectedMV.result?.rowCount ?? 0) + ' rows', status: 'complete' as const },
-          { label: 'Status', description: 'FRESH - matches current database state', status: 'complete' as const },
-        ],
-      };
-    }
-    
-    // Default flow based on last query
-    if (lastResult?.plan) {
-      return {
-        type: 'query' as const,
-        steps: lastResult.plan.map(step => ({
-          label: 'Execution Step',
-          description: step,
-          status: 'complete' as const
-        }))
-      };
-    }
-    return null;
-  };
-
   return (
     <div className="flex h-screen bg-background overflow-hidden text-foreground">
       <Sidebar />
 
       <div className="flex-1 min-h-0 flex flex-col relative z-0 overflow-hidden">
-        {/* Main Content Router */}
+        {/* Workspace Router */}
         {activePage === 'overview' && <Overview />}
+        {activePage === 'sql-lab' && <SqlLabWorkspace />}
+        {activePage === 'simulation' && <SimulatorWorkspace />}
+        {activePage === 'dependencies' && <DependenciesWorkspace />}
+        {activePage === 'compare' && <CompareWorkspace />}
+        {activePage === 'flow' && <QueryXRayWorkspace />}
+
+        {/* Non-Workspace Sections (Preserved) */}
         {activePage === 'credits' && <Credits />}
         {activePage === 'settings' && <Settings />}
         {activePage === 'learn' && <LearnPage />}
         {activePage === 'history' && <HistoryPage />}
         {activePage === 'use-cases' && <UseCasesPage />}
-        {activePage === 'simulation' && <SimulationView />}
         {activePage === 'export' && <ExportPanel />}
-        
-        {activePage === 'sql-lab' && (
-          <div className="flex-1 min-h-0 p-4 overflow-hidden flex flex-col">
-            <div className="neo-surface flex-1 min-h-0 overflow-hidden flex flex-col">
-              <SQLEditor />
-            </div>
-          </div>
-        )}
-
-        {activePage === 'dependencies' && (
-          <div className="flex-1 min-h-0 p-4 overflow-hidden flex flex-col">
-            <div className="neo-surface flex-1 min-h-0 overflow-hidden flex flex-col">
-              <DependencyGraphView graph={dependencyTracker.getGraph()} />
-            </div>
-          </div>
-        )}
-
-        {activePage === 'flow' && (
-          <div className="flex-1 min-h-0 p-4 overflow-hidden flex flex-col">
-            <div className="neo-surface flex-1 min-h-0 overflow-hidden flex flex-col">
-               <ExecutionFlowView flow={buildExecutionFlow()} />
-            </div>
-          </div>
-        )}
-
-        {activePage === 'compare' && <ComparisonView />}
 
         {activePage === 'labs' && (
           <div className="flex-1 min-h-0 p-4 overflow-hidden flex flex-col">
-             <div className="neo-surface flex-1 min-h-0 overflow-hidden flex flex-row ">
+             <div className="neo-surface flex-1 min-h-0 overflow-hidden flex flex-row">
                  <div className="w-1/3 border-r border-border/10 overflow-y-auto p-4">
                    <LabsPanel labState={useStore.getState().labState} />
                  </div>
