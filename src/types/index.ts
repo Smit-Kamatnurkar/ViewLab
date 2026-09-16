@@ -83,6 +83,12 @@ export interface HistoryEntry {
   rowsAffected?: number;
 }
 
+export interface ValidationContext {
+  db?: any;
+  lastSql?: string;
+  lastResult?: any;
+}
+
 export interface LabStep {
   id: string;
   title: string;
@@ -227,9 +233,12 @@ export interface UIState {
   selectedView: string | null;
 }
 
-export interface ValidationContext {
-  db: import('sql.js').Database;
-  viewManager: import('../views/manager').ViewManager;
-  mvManager: import('../materializedViews/manager').MaterializedViewManager;
-  lastResult: QueryResult | null;
+export interface AISettings {
+  provider: 'mock' | 'openai' | 'anthropic' | 'compatible';
+  apiKey: string;
+  model: string;
+  baseUrl: string;
+  testStatus?: 'idle' | 'testing' | 'success' | 'error';
+  testError?: string;
+  lastVerifiedAt?: number;
 }

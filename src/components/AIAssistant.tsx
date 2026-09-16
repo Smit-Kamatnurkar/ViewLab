@@ -2,9 +2,7 @@ import { useState, useEffect } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useStore } from '../store';
 
-const SYSTEM_PROMPT = `You are the ViewLab AI Assistant. You help users understand SQL, Views, Materialized Views, and execution plans.
-Analyze the user's question in the context of their current database schema, recent queries, and execution plans.
-Keep your answers concise, practical, and highly relevant to the provided context.`;
+
 
 const MOCK_RESPONSES: Record<string, string> = {
   'stale': `**Why is a Materialized View STALE?**
@@ -129,6 +127,8 @@ const QUICK_PROMPTS = [
   'Help me get started',
 ];
 
+import { sendAIChatMessage } from '../ai/client';
+
 export function AIAssistant() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<{ role: 'user' | 'assistant' | 'system', content: string }[]>([
@@ -142,10 +142,10 @@ export function AIAssistant() {
     mvManager: state.mvManager,
     aiSettings: state.aiSettings,
     activePage: (state.ui as any).activePage || 'overview',
-    dependencyTracker: state.dependencyTracker
+    dependencyTracker: state.dependencyTracker,
   })));
 
-  const { provider, apiKey, model, baseUrl } = aiSettings;
+  const { provider, apiKey, model } = aiSettings;
 
   useEffect(() => {
     const handleToggle = () => setOpen(prev => !prev);
@@ -178,59 +178,18 @@ Dependency Graph Nodes: ${graphState.nodes.map(n => n.id + ' (' + n.type + ')').
   const getMockResponse = (query: string): string => {
     const lower = query.toLowerCase();
     
-    // Check all mock response keywords
     for (const [key, response] of Object.entries(MOCK_RESPONSES)) {
       if (lower.includes(key)) return response;
     }
 
-    // Context-aware responses
     if (lower.includes('fail') || lower.includes('error')) {
       if (lastResult?.error) {
-        return `I see your last query failed with: "${lastResult.error}". This usually means there's a syntax error or a missing table. Check the table names in the Overview page.`;
+        return `I see your last query failed with: "${lastResult.error}". Check column/table names in the Overview page.`;
       }
       return MOCK_RESPONSES['error'];
     }
 
-    return `I'm a **local educational assistant** (no API key required). I can help with:
-
-- **Views & Materialized Views** — "What is a View?"
-- **Staleness** — "Why is my MV stale?"
-- **Refresh** — "How does REFRESH work?"
-- **Dependencies** — "How do dependencies work?"
-- **Comparison** — "View vs Materialized View?"
-
-For advanced AI responses, configure an API key in Settings → System.`;
-  };
-
-  const askOpenAI = async (userMessage: string) => {
-    try {
-      const url = provider === 'compatible' && baseUrl ? baseUrl + '/chat/completions' : 'https://api.openai.com/v1/chat/completions';
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model: model,
-          messages: [
-            { role: 'system', content: SYSTEM_PROMPT + '\n\n' + getContext() },
-            ...messages.filter(m => m.role !== 'system').map(m => ({ role: m.role, content: m.content })),
-            { role: 'user', content: userMessage }
-          ]
-        })
-      });
-
-      if (!response.ok) {
-        const err = await response.json();
-        throw new Error(err.error?.message || 'AI API Error');
-      }
-
-      const data = await response.json();
-      return data.choices[0].message.content;
-    } catch (e: any) {
-      throw new Error(`Failed to contact AI Provider: ${e.message}`);
-    }
+    return `I'm in **Local Educational Mock Mode**. To get live responses from OpenRouter, OpenAI, or Claude, configure an API key in Settings → System.`;
   };
 
   const handleSend = async (customInput?: string) => {
@@ -245,16 +204,17 @@ For advanced AI responses, configure an API key in Settings → System.`;
       let responseText = '';
       if (provider !== 'mock') {
         if (!apiKey) {
-          throw new Error('API Key is missing. Please configure it in Settings → System.');
+          throw new Error('API Key is missing. Please configure it in Settings.');
         }
-        responseText = await askOpenAI(userMessage);
+        const messageHistory = messages.filter(m => m.role !== 'system');
+        responseText = await sendAIChatMessage(aiSettings, [...messageHistory, { role: 'user', content: userMessage }], getContext());
       } else {
-        await new Promise(r => setTimeout(r, 500));
+        await new Promise(r => setTimeout(r, 400));
         responseText = getMockResponse(userMessage);
       }
       setMessages(prev => [...prev, { role: 'assistant', content: responseText }]);
     } catch (e: any) {
-      setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${e.message}` }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: `⚠️ ${e.message}` }]);
     } finally {
       setLoading(false);
     }

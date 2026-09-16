@@ -10,6 +10,7 @@ import { getSchema } from '../database/schema';
 import { LABS } from '../labs/data';
 import { initializeDatabase } from '../database/sqlite';
 import {
+  AISettings,
   DatabaseSchema,
   DuplicateViewConflict,
   HistoryEntry,
@@ -18,13 +19,6 @@ import {
   SimulationStep,
   UIState,
 } from '../types';
-
-export interface AISettings {
-  provider: 'mock' | 'openai' | 'anthropic' | 'compatible';
-  apiKey: string;
-  model: string;
-  baseUrl: string;
-}
 
 interface AppStore {
   db: Database | null;
@@ -114,10 +108,11 @@ const initialUIState: UIState = {
 };
 
 const initialAISettings: AISettings = {
-  provider: 'mock',
+  provider: 'compatible',
   apiKey: '',
-  model: 'gpt-4o-mini',
-  baseUrl: '',
+  model: 'google/gemini-2.5-flash',
+  baseUrl: 'https://openrouter.ai/api/v1',
+  testStatus: 'idle',
 };
 
 const initialLabState: LabState = {
