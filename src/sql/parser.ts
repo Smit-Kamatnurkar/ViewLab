@@ -17,7 +17,7 @@ function extractDefinition(sql: string, keyword: string): string | undefined {
  * Skips strings and comments, then parses FROM/JOIN clauses
  * including comma-separated tables.
  */
-function extractTableNames(sql: string): string[] {
+export function extractTableNames(sql: string): string[] {
   const tables: Set<string> = new Set();
   
   let inString = false;

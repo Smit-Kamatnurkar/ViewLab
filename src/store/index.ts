@@ -222,10 +222,13 @@ export const useStore = create<AppStore>()(
       setSelectedView: (selectedView) => set({ selectedView }),
 
       refreshSchema: () => {
-        const { db, mvManager } = get();
+        const { db, mvManager, dependencyTracker } = get();
         if (!db) return;
         const schema = getSchema(db, new Set(mvManager.getViewNames()));
-        set({ schema });
+        for (const tbl of schema.tables) {
+          dependencyTracker.registerView(tbl.name, 'table', []);
+        }
+        set({ schema, version: get().version + 1 });
       },
 
       runQuery: async (sql: string, options?: { forceRecreate?: boolean }) => {
