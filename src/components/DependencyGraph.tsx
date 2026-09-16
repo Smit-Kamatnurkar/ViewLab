@@ -38,7 +38,7 @@ function TableNode({ data }: NodeProps<{ label: string; isHighlighted?: boolean;
         </svg>
         <span>{data.label}</span>
       </div>
-      <Handle type="source" position={Position.Bottom} className="w-3 h-3 !bg-blue-500 border-2 border-background" />
+      <Handle type="source" position={Position.Bottom} isConnectable={false} className="w-3 h-3 !bg-blue-500 border-2 border-background pointer-events-none" />
     </div>
   );
 }
@@ -52,7 +52,7 @@ function ViewNode({ data }: NodeProps<{ label: string; isHighlighted?: boolean; 
         ? 'border-purple-500/20 opacity-30'
         : 'border-purple-500/40 hover:border-purple-500'
     }`}>
-      <Handle type="target" position={Position.Top} className="w-3 h-3 !bg-purple-500 border-2 border-background" />
+      <Handle type="target" position={Position.Top} isConnectable={false} className="w-3 h-3 !bg-purple-500 border-2 border-background pointer-events-none" />
       <div className="flex items-center gap-2">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
@@ -63,7 +63,7 @@ function ViewNode({ data }: NodeProps<{ label: string; isHighlighted?: boolean; 
           LIVE
         </span>
       </div>
-      <Handle type="source" position={Position.Bottom} className="w-3 h-3 !bg-purple-500 border-2 border-background" />
+      <Handle type="source" position={Position.Bottom} isConnectable={false} className="w-3 h-3 !bg-purple-500 border-2 border-background pointer-events-none" />
     </div>
   );
 }
@@ -85,7 +85,7 @@ function MaterializedViewNode({ data }: NodeProps<{ label: string; status?: 'FRE
           : ''
       }`}
     >
-      <Handle type="target" position={Position.Top} className={`w-3 h-3 border-2 border-background ${isFresh ? '!bg-emerald-500' : '!bg-amber-500'}`} />
+      <Handle type="target" position={Position.Top} isConnectable={false} className={`w-3 h-3 border-2 border-background pointer-events-none ${isFresh ? '!bg-emerald-500' : '!bg-amber-500'}`} />
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
         <ellipse cx="12" cy="6" rx="6" ry="3" />
         <path d="M6 6v12" />
@@ -102,7 +102,7 @@ function MaterializedViewNode({ data }: NodeProps<{ label: string; status?: 'FRE
       >
         {status}
       </span>
-      <Handle type="source" position={Position.Bottom} className={`w-3 h-3 border-2 border-background ${isFresh ? '!bg-emerald-500' : '!bg-amber-500'}`} />
+      <Handle type="source" position={Position.Bottom} isConnectable={false} className={`w-3 h-3 border-2 border-background pointer-events-none ${isFresh ? '!bg-emerald-500' : '!bg-amber-500'}`} />
     </div>
   );
 }
@@ -264,42 +264,46 @@ export function DependencyGraphView({ graph }: DependencyGraphViewProps) {
     });
   }, [layoutedNodes, focusTarget, connectedNodes]);
 
-  // Map edges with arrowheads and highlight styling
+  // Map edges with arrowheads and orphan protection
   const layoutedEdges = useMemo(() => {
-    return graph.edges.map((e) => {
-      const srcLower = e.source.toLowerCase();
-      const tgtLower = e.target.toLowerCase();
-      const isEdgeHighlighted = focusTarget ? connectedNodes.has(srcLower) && connectedNodes.has(tgtLower) : false;
+    const validNodeIds = new Set(graph.nodes.map(n => n.id.toLowerCase()));
 
-      // Find target node status for STALE edge styling
-      const tgtNode = graph.nodes.find(n => n.id.toLowerCase() === tgtLower);
-      const isStaleTarget = tgtNode?.type === 'materialized-view' && tgtNode.status === 'STALE';
+    return graph.edges
+      .filter(e => validNodeIds.has(e.source.toLowerCase()) && validNodeIds.has(e.target.toLowerCase()))
+      .map((e) => {
+        const srcLower = e.source.toLowerCase();
+        const tgtLower = e.target.toLowerCase();
+        const isEdgeHighlighted = focusTarget ? connectedNodes.has(srcLower) && connectedNodes.has(tgtLower) : false;
 
-      const strokeColor = isStaleTarget
-        ? '#f59e0b'
-        : isEdgeHighlighted
-        ? 'hsl(var(--primary))'
-        : 'hsl(var(--border))';
+        // Find target node status for STALE edge styling
+        const tgtNode = graph.nodes.find(n => n.id.toLowerCase() === tgtLower);
+        const isStaleTarget = tgtNode?.type === 'materialized-view' && tgtNode.status === 'STALE';
 
-      return {
-        id: e.id,
-        source: e.source,
-        target: e.target,
-        type: 'smoothstep',
-        animated: true,
-        style: {
-          stroke: strokeColor,
-          strokeWidth: isEdgeHighlighted || isStaleTarget ? 2.5 : 1.5,
-          opacity: focusTarget && !isEdgeHighlighted ? 0.2 : 1,
-        },
-        markerEnd: {
-          type: MarkerType.ArrowClosed,
-          width: 18,
-          height: 18,
-          color: strokeColor,
-        },
-      };
-    });
+        const strokeColor = isStaleTarget
+          ? '#f59e0b'
+          : isEdgeHighlighted
+          ? 'hsl(var(--primary))'
+          : 'hsl(var(--border))';
+
+        return {
+          id: e.id,
+          source: e.source,
+          target: e.target,
+          type: 'smoothstep',
+          animated: true,
+          style: {
+            stroke: strokeColor,
+            strokeWidth: isEdgeHighlighted || isStaleTarget ? 2.5 : 1.5,
+            opacity: focusTarget && !isEdgeHighlighted ? 0.2 : 1,
+          },
+          markerEnd: {
+            type: MarkerType.ArrowClosed,
+            width: 18,
+            height: 18,
+            color: strokeColor,
+          },
+        };
+      });
   }, [graphStr, focusTarget, connectedNodes, graph.nodes]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(styledNodes);
@@ -324,6 +328,10 @@ export function DependencyGraphView({ graph }: DependencyGraphViewProps) {
         onNodeMouseEnter={(_, node) => setHoveredNode(node.id)}
         onNodeMouseLeave={() => setHoveredNode(null)}
         nodeTypes={nodeTypes}
+        nodesConnectable={false}
+        connectOnClick={false}
+        elementsSelectable={true}
+        nodesDraggable={true}
         fitView
         attributionPosition="bottom-right"
         proOptions={{ hideAttribution: true }}

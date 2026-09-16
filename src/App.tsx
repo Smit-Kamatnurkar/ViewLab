@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useStore } from './store';
 import { initializeDatabase } from './database/sqlite';
+import { executeMultiSQL } from './sql/executor';
 import { Sidebar } from './components/layout/Sidebar';
 import { Button } from './components/Button';
 
@@ -59,6 +60,11 @@ export default function App() {
         const database = await initializeDatabase();
         console.log('[ViewLab] Database created successfully');
         setDb(database);
+        const { viewManager, mvManager, dependencyTracker } = useStore.getState();
+        if (viewManager.getViewNames().length === 0 && mvManager.getViewNames().length === 0) {
+          const demoSQL = `CREATE VIEW artwork_sales AS SELECT a.title, ar.name AS artist_name, s.buyer, s.sale_price FROM ARTWORK a JOIN ARTIST ar ON a.artist_id = ar.artist_id JOIN SALE s ON a.artwork_id = s.artwork_id;\nCREATE MATERIALIZED VIEW artwork_sales_mv AS SELECT * FROM artwork_sales;`;
+          await executeMultiSQL({ db: database, viewManager, mvManager, dependencyTracker }, demoSQL);
+        }
         console.log('[ViewLab] Refreshing schema');
         refreshSchema();
         setInitialized(true);

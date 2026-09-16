@@ -349,10 +349,13 @@ export const useStore = create<AppStore>()(
         mvManager.clear();
         dependencyTracker.clear();
 
-        // Register base tables in dependencyTracker
+        // 2. Pre-build automatic demo graph (ARTIST, ARTWORK, SALE -> artwork_sales -> artwork_sales_mv)
         dependencyTracker.registerView('ARTIST', 'table', []);
         dependencyTracker.registerView('ARTWORK', 'table', []);
         dependencyTracker.registerView('SALE', 'table', []);
+
+        const demoSQL = `CREATE VIEW artwork_sales AS SELECT a.title, ar.name AS artist_name, s.buyer, s.sale_price FROM ARTWORK a JOIN ARTIST ar ON a.artist_id = ar.artist_id JOIN SALE s ON a.artwork_id = s.artwork_id;\nCREATE MATERIALIZED VIEW artwork_sales_mv AS SELECT * FROM artwork_sales;`;
+        await executeMultiSQL({ db: newDb, viewManager, mvManager, dependencyTracker }, demoSQL);
 
         set({
           db: newDb,
@@ -372,14 +375,8 @@ export const useStore = create<AppStore>()(
 
       runSignatureDemo: async () => {
         await get().resetDatabase();
-        const demoSQL = `CREATE VIEW expensive_artworks AS SELECT * FROM ARTWORK WHERE price > 100000;
-CREATE MATERIALIZED VIEW expensive_artworks_mv AS SELECT * FROM ARTWORK WHERE price > 100000;
-UPDATE ARTWORK SET price = 150000 WHERE artwork_id = 3;
-SELECT * FROM expensive_artworks;
-SELECT * FROM expensive_artworks_mv;
-REFRESH MATERIALIZED VIEW expensive_artworks_mv;`;
-
-        await get().runQuery(demoSQL);
+        const updateSQL = `UPDATE ARTWORK SET price = 150000 WHERE artwork_id = 3;`;
+        await get().runQuery(updateSQL);
         get().setUI({ activePage: 'compare' });
       },
 
