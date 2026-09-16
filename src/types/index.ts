@@ -219,7 +219,7 @@ export interface HistoryState {
   entries: HistoryEntry[];
 }
 
-export type ActivePage = 'overview' | 'sql-lab' | 'dependencies' | 'compare' | 'flow' | 'labs' | 'credits' | 'settings' | 'history' | 'learn' | 'simulation' | 'use-cases' | 'export';
+export type ActivePage = 'overview' | 'sql-lab' | 'dependencies' | 'compare' | 'flow' | 'labs' | 'credits' | 'settings' | 'history' | 'learn' | 'simulation' | 'use-cases' | 'export' | 'references';
 
 export interface UIState {
   sidebarOpen: boolean;

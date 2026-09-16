@@ -9,6 +9,7 @@ import { Button } from './components/Button';
 // Pages
 import { Overview } from './components/pages/Overview';
 import { Credits } from './components/pages/Credits';
+import { ReferencesPage } from './components/pages/ReferencesPage';
 import { Settings } from './components/pages/Settings';
 import { LearnPage } from './components/pages/LearnPage';
 import { HistoryPage } from './components/pages/HistoryPage';
@@ -144,6 +145,7 @@ export default function App() {
 
         {/* Non-Workspace Sections (Preserved) */}
         {activePage === 'credits' && <Credits />}
+        {activePage === 'references' && <ReferencesPage />}
         {activePage === 'settings' && <Settings />}
         {activePage === 'learn' && <LearnPage />}
         {activePage === 'history' && <HistoryPage />}
