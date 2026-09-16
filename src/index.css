@@ -1,0 +1,205 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+.light {
+    --background: 0 0% 98%;
+    --foreground: 220 20% 12%;
+    --card: 0 0% 96%;
+    --card-foreground: 220 20% 12%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 263 70% 50%;
+    --muted: 0 0% 92%;
+    --muted-foreground: 220 20% 45%;
+    --primary: 263 70% 50%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 0 0% 90%;
+    --secondary-foreground: 220 20% 12%;
+    
+    --shadow-dark: rgba(0, 0, 0, 0.1);
+    --shadow-light: rgba(255, 255, 255, 1);
+}
+
+  :root {
+    --background: 220 20% 12%; 
+    --foreground: 210 40% 98%;
+    --card: 220 20% 14%;
+    --card-foreground: 210 40% 98%;
+    --border: 220 20% 20%;
+    --input: 220 20% 18%;
+    --ring: 263 70% 50%;
+    --muted: 220 20% 18%;
+    --muted-foreground: 215 20% 65%;
+    --primary: 263 70% 60%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 220 20% 24%;
+    --secondary-foreground: 210 40% 98%;
+    --destructive: 0 84% 60%;
+    
+    /* Semantic Colors for DB Objects */
+    --color-live: 199 89% 48%; /* Blue */
+    --color-table: 215 100% 65%; /* Soft Blue */
+    --color-view: 270 70% 60%; /* Purple */
+    --color-mv: 142 70% 45%; /* Green */
+    
+    /* Semantic Colors for Status */
+    --color-stale: 35 100% 50%; /* Orange */
+    --color-fresh: 142 70% 45%; /* Green */
+    --color-refreshing: 199 89% 48%; /* Blue */
+    --color-success: 142 70% 45%;
+    --color-error: 0 84% 60%;
+    --color-warning: 35 100% 50%;
+    --color-info: 199 89% 48%;
+    --shadow-dark: rgba(0, 0, 0, 0.4);
+    --shadow-light: rgba(255, 255, 255, 0.03);
+
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    background-color: hsl(var(--background));
+  }
+}
+
+@layer utilities {
+  .neo-surface {
+    @apply bg-card border-none;
+    box-shadow: 
+      8px 8px 16px var(--shadow-dark),
+      -8px -8px 16px var(--shadow-light);
+    border-radius: 12px;
+  }
+  
+  .neo-surface-inset {
+    @apply bg-muted border-none;
+    box-shadow: 
+      inset 4px 4px 8px var(--shadow-dark),
+      inset -4px -4px 8px var(--shadow-light);
+    border-radius: 12px;
+  }
+  
+  .neo-button {
+    @apply transition-all duration-200 active:scale-95 bg-card border-none text-foreground font-medium flex items-center justify-center;
+    box-shadow: 
+      4px 4px 8px var(--shadow-dark),
+      -4px -4px 8px var(--shadow-light);
+    border-radius: 8px;
+  }
+  
+  .neo-button:hover {
+    box-shadow: 
+      6px 6px 12px var(--shadow-dark),
+      -6px -6px 12px var(--shadow-light);
+  }
+  
+  .neo-button:active {
+    box-shadow: 
+      inset 4px 4px 8px var(--shadow-dark),
+      inset -4px -4px 8px var(--shadow-light);
+  }
+
+  .neo-button-primary {
+    @apply neo-button bg-primary text-primary-foreground;
+    box-shadow: 
+      4px 4px 10px rgba(139, 92, 246, 0.4),
+      -4px -4px 10px rgba(255, 255, 255, 0.05);
+  }
+  
+  .neo-button-primary:active {
+    box-shadow: 
+      inset 4px 4px 8px var(--shadow-dark),
+      inset -4px -4px 8px var(--shadow-light);
+  }
+}
+
+.cm-editor {
+  @apply bg-background border border-input rounded-lg;
+  height: 100%;
+}
+
+.cm-content {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+}
+
+.cm-gutters {
+  @apply bg-muted/50 border-r border-border;
+}
+
+.cm-activeLineGutter {
+  @apply bg-accent;
+}
+
+.cm-selectionMatch {
+  @apply bg-primary/20;
+}
+
+.react-flow__node {
+  @apply bg-card border border-border rounded-lg px-3 py-2 text-sm font-medium;
+}
+
+.react-flow__edge-path {
+  stroke: hsl(var(--muted-foreground));
+  stroke-width: 1.5;
+}
+
+.react-flow__handle {
+  @apply bg-primary border-2 border-background;
+  width: 10px;
+  height: 10px;
+}
+
+.react-flow__handle.connecting {
+  @apply bg-primary;
+}
+
+.result-grid {
+  @apply w-full border-collapse text-sm;
+}
+
+.result-grid th {
+  @apply text-left p-2 border-b border-border font-medium text-muted-foreground bg-muted/50 sticky top-0 z-10;
+}
+
+.result-grid td {
+  @apply p-2 border-b border-border/50;
+}
+
+.result-grid tr:hover td {
+  @apply bg-accent/50;
+}
+
+.result-grid tr:last-child td {
+  @apply border-b-0;
+}
+@layer utilities {
+  .neo-surface {
+    @apply bg-background border border-white/5;
+    box-shadow: 
+      8px 8px 16px rgba(0, 0, 0, 0.4),
+      -8px -8px 16px rgba(255, 255, 255, 0.05);
+  }
+  
+  .neo-surface-inset {
+    @apply bg-background border border-white/5;
+    box-shadow: 
+      inset 6px 6px 12px rgba(0, 0, 0, 0.4),
+      inset -6px -6px 12px rgba(255, 255, 255, 0.05);
+  }
+  
+  .neo-button {
+    @apply transition-all duration-200 active:scale-95;
+    box-shadow: 
+      4px 4px 8px rgba(0, 0, 0, 0.3),
+      -4px -4px 8px rgba(255, 255, 255, 0.05);
+  }
+  
+  .neo-button:active {
+    box-shadow: 
+      inset 4px 4px 8px rgba(0, 0, 0, 0.3),
+      inset -4px -4px 8px rgba(255, 255, 255, 0.05);
+  }
+}
