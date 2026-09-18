@@ -119,6 +119,15 @@ export function Credits() {
               <span>Guided By</span>
             </div>
 
+            {/* Faculty Photograph */}
+            <div className="relative w-36 h-44 rounded-xl overflow-hidden shadow-inner border-2 border-border/60 mx-auto transition-colors bg-muted flex flex-col items-center justify-center">
+              <img 
+                src="/Faculty.jpeg" 
+                alt="Dr. Swaminathan A" 
+                className="w-full h-full object-cover" 
+              />
+            </div>
+
             <div className="space-y-1">
               <h3 className="text-2xl font-bold text-foreground">
                 Dr. Swaminathan A

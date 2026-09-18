@@ -3,13 +3,15 @@ import { useShallow } from 'zustand/react/shallow';
 import { Badge } from '../Badge';
 
 export function WorkspaceContextBar() {
-  const { schema, viewManager, mvManager, resetDatabase, runSignatureDemo } = useStore(
+  const { schema, viewManager, mvManager, resetDatabase, runSignatureDemo, databases, activeDatabaseId } = useStore(
     useShallow((state) => ({
       schema: state.schema,
       viewManager: state.viewManager,
       mvManager: state.mvManager,
       resetDatabase: state.resetDatabase,
       runSignatureDemo: state.runSignatureDemo,
+      databases: state.databases,
+      activeDatabaseId: state.activeDatabaseId,
     }))
   );
 
@@ -19,13 +21,16 @@ export function WorkspaceContextBar() {
   const mvsCount = mvs.length;
   const staleCount = mvs.filter((mv) => mv.status === 'STALE').length;
 
+  const activeDb = databases[activeDatabaseId];
+  const activeDbName = activeDb?.metadata?.name || 'No Database';
+
   return (
     <div className="flex flex-wrap items-center justify-between px-4 py-2 bg-card/60 border-b border-border/50 text-xs font-mono text-muted-foreground backdrop-blur-sm gap-3">
       {/* Database Status Info */}
       <div className="flex flex-wrap items-center gap-4">
         <div className="flex items-center gap-1.5 font-bold text-foreground">
           <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <span>ViewLab DB</span>
+          <span>{activeDbName}</span>
         </div>
 
         <div className="h-3 w-px bg-border/60" />

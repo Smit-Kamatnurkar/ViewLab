@@ -1,7 +1,8 @@
 import { useEffect } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useStore } from './store';
-import { initializeDatabase } from './database/sqlite';
+import { initializeDatabase, exportDatabase, uint8ToBase64, createDatabaseFromSQL } from './database/sqlite';
+import { SHOP_SCHEMA, SHOP_SEED, HOSPITAL_SCHEMA, HOSPITAL_SEED } from './database/seeds';
 import { executeMultiSQL } from './sql/executor';
 import { Sidebar } from './components/layout/Sidebar';
 import { Button } from './components/Button';
@@ -28,14 +29,12 @@ import { ExportPanel } from './components/ExportPanel';
 export default function App() {
   const {
     db, initError,
-    ui, setDb, refreshSchema,
+    ui,
     setInitialized, setInitializing, setInitError
   } = useStore(useShallow(state => ({
     db: state.db,
     initError: state.initError,
     ui: state.ui,
-    setDb: state.setDb,
-    refreshSchema: state.refreshSchema,
     setInitialized: state.setInitialized,
     setInitializing: state.setInitializing,
     setInitError: state.setInitError,
@@ -57,21 +56,80 @@ export default function App() {
       setInitError(null);
       console.log('[ViewLab] Starting initialization');
       try {
-        console.log('[ViewLab] Creating database');
-        const database = await initializeDatabase();
-        console.log('[ViewLab] Database created successfully');
-        setDb(database);
-        const { viewManager, mvManager, dependencyTracker } = useStore.getState();
-        if (viewManager.getViewNames().length === 0 && mvManager.getViewNames().length === 0) {
+        const store = useStore.getState();
+        const { databases } = store;
+
+        // Ensure Default DB exists
+        if (!databases['default-db']) {
+          console.log('[ViewLab] Creating Default DB');
+          const db = await initializeDatabase();
+          // Demo graph
+          const { viewManager, mvManager, dependencyTracker } = useStore.getState();
           const demoSQL = `CREATE VIEW artwork_sales AS SELECT a.title, ar.name AS artist_name, s.buyer, s.sale_price FROM ARTWORK a JOIN ARTIST ar ON a.artist_id = ar.artist_id JOIN SALE s ON a.artwork_id = s.artwork_id;\nCREATE MATERIALIZED VIEW artwork_sales_mv AS SELECT * FROM artwork_sales;`;
-          await executeMultiSQL({ db: database, viewManager, mvManager, dependencyTracker }, demoSQL);
+          await executeMultiSQL({ db, viewManager, mvManager, dependencyTracker }, demoSQL);
+          
+          const base64 = uint8ToBase64(exportDatabase(db));
+          
+          useStore.setState((state) => ({
+            databases: {
+              ...state.databases,
+              'default-db': {
+                metadata: { id: 'default-db', name: 'Default DB', description: 'Default art gallery database with artists, artworks, and sales', isDefault: true },
+                views: viewManager.serialize(),
+                materializedViews: mvManager.serialize(),
+                dependencies: dependencyTracker.getGraph(),
+                history: [],
+                sqliteBase64: base64
+              }
+            }
+          }));
         }
-        console.log('[ViewLab] Refreshing schema');
-        refreshSchema();
+
+        if (!useStore.getState().databases['shop-db']) {
+          console.log('[ViewLab] Creating ShopDB');
+          const db = await createDatabaseFromSQL(SHOP_SCHEMA, SHOP_SEED);
+          const base64 = uint8ToBase64(exportDatabase(db));
+          useStore.setState((state) => ({
+            databases: {
+              ...state.databases,
+              'shop-db': {
+                metadata: { id: 'shop-db', name: 'ShopDB', description: 'E-commerce analytics database with customers, products, orders', isDefault: false },
+                views: [],
+                materializedViews: [],
+                dependencies: { nodes: [], edges: [] },
+                history: [],
+                sqliteBase64: base64
+              }
+            }
+          }));
+        }
+
+        if (!useStore.getState().databases['hospital-db']) {
+          console.log('[ViewLab] Creating HospitalDB');
+          const db = await createDatabaseFromSQL(HOSPITAL_SCHEMA, HOSPITAL_SEED);
+          const base64 = uint8ToBase64(exportDatabase(db));
+          useStore.setState((state) => ({
+            databases: {
+              ...state.databases,
+              'hospital-db': {
+                metadata: { id: 'hospital-db', name: 'HospitalDB', description: 'Healthcare educational database with patients, doctors, appointments', isDefault: false },
+                views: [],
+                materializedViews: [],
+                dependencies: { nodes: [], edges: [] },
+                history: [],
+                sqliteBase64: base64
+              }
+            }
+          }));
+        }
+
+        const activeId = useStore.getState().activeDatabaseId || 'default-db';
+        await useStore.getState().switchDatabase(activeId);
+
         setInitialized(true);
         console.log('[ViewLab] Initialization complete');
       } catch (error) {
-        console.error('[ViewLab] Failed to initialize database:', error);
+        console.error('[ViewLab] Failed to initialize databases:', error);
         setInitError(error instanceof Error ? error.message : String(error));
       } finally {
         setInitializing(false);
@@ -134,7 +192,7 @@ export default function App() {
     <div className="flex h-screen bg-background overflow-hidden text-foreground">
       <Sidebar />
 
-      <div className="flex-1 min-h-0 flex flex-col relative z-0 overflow-hidden">
+      <div className="flex-1 min-h-0 flex flex-col relative z-10 overflow-hidden">
         {/* Workspace Router */}
         {activePage === 'overview' && <Overview />}
         {activePage === 'sql-lab' && <SqlLabWorkspace />}

@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import { useShallow } from 'zustand/react/shallow';
 import { useStore } from '../../store';
 import { ActivePage } from '../../types';
+import { Button } from '../Button';
+import { Input } from '../Input';
 
 interface NavGroup {
   name: string;
@@ -40,98 +43,181 @@ const navGroups: NavGroup[] = [
 ];
 
 export function Sidebar() {
-  const { ui, setUI, history, mvManager } = useStore(useShallow(state => ({
+  const { ui, setUI, history, mvManager, databases, activeDatabaseId, switchDatabase, createDatabase } = useStore(useShallow(state => ({
     ui: state.ui,
     setUI: state.setUI,
     history: state.history,
     mvManager: state.mvManager,
+    databases: state.databases,
+    activeDatabaseId: state.activeDatabaseId,
+    switchDatabase: state.switchDatabase,
+    createDatabase: state.createDatabase,
   })));
   
   const activePage = ui.activePage || 'overview';
   const staleCount = Array.from(mvManager.getAllViews().values()).filter(mv => mv.status === 'STALE').length;
 
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newDbName, setNewDbName] = useState('');
+  const [newDbDescription, setNewDbDescription] = useState('');
+
+  const handleCreateDatabase = async () => {
+    if (newDbName.trim().length > 0) {
+      await createDatabase(newDbName.trim(), newDbDescription.trim() || undefined);
+      setNewDbName('');
+      setNewDbDescription('');
+      setShowCreateModal(false);
+    }
+  };
+
+  const handleOpenCreateModal = () => {
+    setShowCreateModal(true);
+  };
+
   return (
-    <div className="flex flex-col h-full w-64 bg-card text-card-foreground border-r border-border overflow-hidden z-10 shadow-sm transition-colors duration-200">
-      <div className="flex items-center h-16 px-6 mb-2 border-b border-border/40">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm shadow-sm">
-            V
+    <>
+      <div className="flex flex-col h-full w-64 bg-card text-card-foreground border-r border-border z-10 shadow-sm transition-colors duration-200">
+        <div className="flex flex-col px-6 pt-4 pb-3 mb-2 border-b border-border/40 gap-3">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm shadow-sm">
+              V
+            </div>
+            <h1 className="text-xl font-bold tracking-tight text-foreground">ViewLab</h1>
           </div>
-          <h1 className="text-xl font-bold tracking-tight text-foreground">ViewLab</h1>
+
+          {/* Database Selector */}
+          <div className="flex flex-col gap-1.5 mt-2">
+            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Database</label>
+            <select 
+              className="w-full bg-muted/50 border border-border rounded-md px-2 py-1.5 text-sm font-medium focus:outline-none focus:border-primary transition-colors cursor-pointer pointer-events-auto"
+              value={activeDatabaseId}
+              onChange={(e) => {
+                switchDatabase(e.target.value);
+              }}
+            >
+              {Object.values(databases).map(db => (
+                <option key={db.metadata.id} value={db.metadata.id}>
+                  {db.metadata.name}
+                </option>
+              ))}
+            </select>
+            <Button variant="ghost" size="sm" className="w-full justify-start mt-1" onClick={handleOpenCreateModal}>
+              <span className="mr-2">+</span> Create New Database
+            </Button>
+          </div>
+        </div>
+
+        <nav className="flex-1 px-3 space-y-5 overflow-y-auto pb-4 pt-3 pointer-events-auto">
+          {navGroups.map((group) => (
+            <div key={group.name} className="space-y-1">
+              <h4 className="px-3 text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{group.name}</h4>
+              {group.items.map((item) => {
+                const isActive = activePage === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setUI({ activePage: item.id })}
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                      isActive
+                        ? 'bg-primary/10 text-primary font-semibold border border-primary/20 shadow-sm'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
+                    }`}
+                  >
+                    <div className={isActive ? 'text-primary' : 'text-muted-foreground'}>
+                      {item.icon}
+                    </div>
+                    <span className="flex-1 text-left">{item.label}</span>
+                    {item.id === 'history' && history.length > 0 && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-mono">{history.length}</span>
+                    )}
+                    {item.id === 'compare' && staleCount > 0 && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-500 font-bold">{staleCount}</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          ))}
+        </nav>
+
+        <div className="p-3 border-t border-border/40 space-y-3 bg-muted/20">
+          {/* Theme Toggle Controls */}
+          <div className="flex gap-1 bg-muted/60 p-1 rounded-lg border border-border/50">
+            <button
+              onClick={() => setUI({ theme: 'light' })}
+              title="Switch to Light Theme"
+              className={`flex-1 py-1.5 px-2 text-xs font-semibold rounded-md transition-all flex items-center justify-center gap-1.5 ${
+                ui.theme === 'light'
+                  ? 'bg-card text-foreground shadow-sm border border-border/50'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <span>☀</span> Light
+            </button>
+            <button
+              onClick={() => setUI({ theme: 'dark' })}
+              title="Switch to Dark Theme"
+              className={`flex-1 py-1.5 px-2 text-xs font-semibold rounded-md transition-all flex items-center justify-center gap-1.5 ${
+                ui.theme === 'dark'
+                  ? 'bg-card text-foreground shadow-sm border border-border/50'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <span>🌙</span> Dark
+            </button>
+          </div>
+
+          <button 
+            onClick={() => document.dispatchEvent(new CustomEvent('toggle-ai'))}
+            className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-card border border-border hover:bg-muted text-primary text-sm font-semibold rounded-lg shadow-sm transition-all"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+              <circle cx="12" cy="12" r="4"></circle>
+            </svg>
+            Lab Assistant
+          </button>
         </div>
       </div>
 
-      <nav className="flex-1 px-3 space-y-5 overflow-y-auto pb-4 pt-3">
-        {navGroups.map((group) => (
-          <div key={group.name} className="space-y-1">
-            <h4 className="px-3 text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">{group.name}</h4>
-            {group.items.map((item) => {
-              const isActive = activePage === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => setUI({ activePage: item.id })}
-                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                    isActive
-                      ? 'bg-primary/10 text-primary font-semibold border border-primary/20 shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
-                  }`}
-                >
-                  <div className={isActive ? 'text-primary' : 'text-muted-foreground'}>
-                    {item.icon}
-                  </div>
-                  <span className="flex-1 text-left">{item.label}</span>
-                  {item.id === 'history' && history.length > 0 && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-mono">{history.length}</span>
-                  )}
-                  {item.id === 'compare' && staleCount > 0 && (
-                    <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-500 font-bold">{staleCount}</span>
-                  )}
-                </button>
-              );
-            })}
+      {/* Create Database Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-xs flex items-center justify-center p-4 pointer-events-auto">
+          <div className="p-6 rounded-2xl max-w-md w-full space-y-4 shadow-2xl border border-border bg-card text-card-foreground pointer-events-auto">
+            <h3 className="text-lg font-bold">Create New Database</h3>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Name</label>
+                <Input
+                  value={newDbName}
+                  onChange={e => setNewDbName(e.target.value)}
+                  placeholder="My Database"
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-muted-foreground mb-1">Description (optional)</label>
+                <Input
+                  value={newDbDescription}
+                  onChange={e => setNewDbDescription(e.target.value)}
+                  placeholder="Description of this database"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className="px-3 py-1.5 rounded-lg border border-border text-xs font-semibold hover:bg-muted"
+              >
+                Cancel
+              </button>
+              <Button onClick={handleCreateDatabase} disabled={!newDbName.trim()}>
+                Create Database
+              </Button>
+            </div>
           </div>
-        ))}
-      </nav>
-
-      <div className="p-3 border-t border-border/40 space-y-3 bg-muted/20">
-        {/* Theme Toggle Controls */}
-        <div className="flex gap-1 bg-muted/60 p-1 rounded-lg border border-border/50">
-          <button
-            onClick={() => setUI({ theme: 'light' })}
-            title="Switch to Light Theme"
-            className={`flex-1 py-1.5 px-2 text-xs font-semibold rounded-md transition-all flex items-center justify-center gap-1.5 ${
-              ui.theme === 'light'
-                ? 'bg-card text-foreground shadow-sm border border-border/50'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <span>☀</span> Light
-          </button>
-          <button
-            onClick={() => setUI({ theme: 'dark' })}
-            title="Switch to Dark Theme"
-            className={`flex-1 py-1.5 px-2 text-xs font-semibold rounded-md transition-all flex items-center justify-center gap-1.5 ${
-              ui.theme === 'dark'
-                ? 'bg-card text-foreground shadow-sm border border-border/50'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <span>🌙</span> Dark
-          </button>
         </div>
-
-        <button 
-          onClick={() => document.dispatchEvent(new CustomEvent('toggle-ai'))}
-          className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-card border border-border hover:bg-muted text-primary text-sm font-semibold rounded-lg shadow-sm transition-all"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
-            <circle cx="12" cy="12" r="4"></circle>
-          </svg>
-          Lab Assistant
-        </button>
-      </div>
-    </div>
+      )}
+    </>
   );
 }

@@ -94,7 +94,7 @@ export function LearnModePanel() {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 w-96 animate-in slide-in-from-bottom-2 fade-in">
+    <div className="absolute bottom-4 right-4 z-40 w-96 animate-in slide-in-from-bottom-2 fade-in pointer-events-auto">
       <Card className={`${variantClasses[message.variant]} border`}>
         <CardContent className="p-4">
           <div className="flex items-start gap-3">

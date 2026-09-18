@@ -8,7 +8,7 @@ import { parseSQL, splitSQLStatements } from '../sql/parser';
 import { executeMultiSQL } from '../sql/executor';
 import { getSchema } from '../database/schema';
 import { LABS } from '../labs/data';
-import { initializeDatabase } from '../database/sqlite';
+import { initializeDatabase, exportDatabase, importDatabase, uint8ToBase64, base64ToUint8, createDatabaseFromSQL } from '../database/sqlite';
 import {
   AISettings,
   DatabaseSchema,
@@ -20,7 +20,26 @@ import {
   UIState,
 } from '../types';
 
+export interface DatabaseMetadata {
+  id: string;
+  name: string;
+  description: string;
+  isDefault?: boolean;
+}
+
+export interface SerializableDatabaseState {
+  metadata: DatabaseMetadata;
+  views: any;
+  materializedViews: any;
+  dependencies: any;
+  history: HistoryEntry[];
+  sqliteBase64: string;
+}
+
 interface AppStore {
+  databases: Record<string, SerializableDatabaseState>;
+  activeDatabaseId: string;
+  
   db: Database | null;
   schema: DatabaseSchema | null;
   initialized: boolean;
@@ -36,6 +55,9 @@ interface AppStore {
   ui: UIState;
   aiSettings: AISettings;
   setAISettings: (settings: Partial<AISettings>) => void;
+
+  switchDatabase: (id: string) => Promise<void>;
+  createDatabase: (name: string, description?: string) => Promise<void>;
 
   // Single Source of Truth for Query Results & Simulation
   lastResult: QueryResult | null;
@@ -58,6 +80,7 @@ interface AppStore {
       simulationSpeedIndex: number;
     }>
   ) => void;
+
 
   setDuplicateViewConflict: (conflict: DuplicateViewConflict | null) => void;
   resolveDuplicateViewConflict: (action: 'use' | 'recreate' | 'cancel') => Promise<void>;
@@ -125,6 +148,8 @@ const initialLabState: LabState = {
 export const useStore = create<AppStore>()(
   persist(
     (set, get) => ({
+      databases: {},
+      activeDatabaseId: '',
       db: null,
       schema: null,
       initialized: false,
@@ -140,6 +165,76 @@ export const useStore = create<AppStore>()(
       ui: initialUIState,
       aiSettings: initialAISettings,
       setAISettings: (settings) => set((state) => ({ aiSettings: { ...state.aiSettings, ...settings } })),
+
+      switchDatabase: async (id: string) => {
+        const { databases, activeDatabaseId, db, viewManager, mvManager, dependencyTracker, history } = get();
+        
+        if (db && activeDatabaseId && databases[activeDatabaseId]) {
+          const currentBase64 = uint8ToBase64(exportDatabase(db));
+          const currentState: SerializableDatabaseState = {
+            metadata: databases[activeDatabaseId].metadata,
+            views: viewManager.serialize(),
+            materializedViews: mvManager.serialize(),
+            dependencies: dependencyTracker.getGraph(),
+            history: history,
+            sqliteBase64: currentBase64
+          };
+          set((state) => ({ databases: { ...state.databases, [activeDatabaseId]: currentState } }));
+        }
+
+        const target = get().databases[id];
+        if (!target) return;
+
+        set({ initializing: true });
+        try {
+          const newDb = await importDatabase(base64ToUint8(target.sqliteBase64));
+          
+          viewManager.clear();
+          mvManager.clear();
+          dependencyTracker.clear();
+          
+          if (target.views) viewManager.loadViews(target.views);
+          if (target.materializedViews) mvManager.loadViews(target.materializedViews);
+          if (target.dependencies) dependencyTracker.loadGraph(target.dependencies);
+
+          set({ 
+            db: newDb, 
+            activeDatabaseId: id,
+            history: target.history || [],
+            lastResult: null,
+            currentSQL: '',
+            simulationSteps: [],
+            simulationStepIndex: -1,
+            isSimulationPlaying: false,
+            duplicateViewConflict: null,
+            version: get().version + 1,
+            initializing: false
+          });
+          
+          get().refreshSchema();
+        } catch(e) {
+          console.error("[ViewLab] Failed to switch DB", e);
+          set({ initializing: false });
+        }
+      },
+
+      createDatabase: async (name: string, description?: string) => {
+        const id = 'custom-' + Date.now();
+        const emptyDb = await createDatabaseFromSQL('');
+        const base64 = uint8ToBase64(exportDatabase(emptyDb));
+        
+        const newState: SerializableDatabaseState = {
+          metadata: { id, name, description: description || 'Custom database', isDefault: false },
+          views: [],
+          materializedViews: [],
+          dependencies: { nodes: [], edges: [] },
+          history: [],
+          sqliteBase64: base64
+        };
+
+        set((state) => ({ databases: { ...state.databases, [id]: newState } }));
+        await get().switchDatabase(id);
+      },
 
       lastResult: null,
       running: false,
@@ -336,23 +431,59 @@ export const useStore = create<AppStore>()(
       },
 
       resetDatabase: async () => {
-        const { viewManager, mvManager, dependencyTracker } = get();
+        const { viewManager, mvManager, dependencyTracker, activeDatabaseId, databases } = get();
+        const activeDb = databases[activeDatabaseId];
+        
+        if (!activeDb) return;
 
-        // 1. Re-initialize database
-        const newDb = await initializeDatabase();
-        viewManager.clear();
-        mvManager.clear();
-        dependencyTracker.clear();
+        // Re-create the database based on its type
+        let newDb: Database;
+        if (activeDb.metadata.isDefault) {
+          // Default DB - reinitialize with seed data
+          newDb = await initializeDatabase();
+          
+          // Rebuild demo graph
+          dependencyTracker.registerView('ARTIST', 'table', []);
+          dependencyTracker.registerView('ARTWORK', 'table', []);
+          dependencyTracker.registerView('SALE', 'table', []);
+          
+          const demoSQL = `CREATE VIEW artwork_sales AS SELECT a.title, ar.name AS artist_name, s.buyer, s.sale_price FROM ARTWORK a JOIN ARTIST ar ON a.artist_id = ar.artist_id JOIN SALE s ON a.artwork_id = s.artwork_id;\nCREATE MATERIALIZED VIEW artwork_sales_mv AS SELECT * FROM artwork_sales;`;
+          await executeMultiSQL({ db: newDb, viewManager, mvManager, dependencyTracker }, demoSQL);
+        } else if (activeDb.metadata.id === 'shop-db') {
+          // ShopDB - reseed
+          const { SHOP_SCHEMA, SHOP_SEED } = await import('../database/seeds');
+          newDb = await createDatabaseFromSQL(SHOP_SCHEMA, SHOP_SEED);
+          viewManager.clear();
+          mvManager.clear();
+          dependencyTracker.clear();
+        } else if (activeDb.metadata.id === 'hospital-db') {
+          // HospitalDB - reseed
+          const { HOSPITAL_SCHEMA, HOSPITAL_SEED } = await import('../database/seeds');
+          newDb = await createDatabaseFromSQL(HOSPITAL_SCHEMA, HOSPITAL_SEED);
+          viewManager.clear();
+          mvManager.clear();
+          dependencyTracker.clear();
+        } else {
+          // Custom database - just clear to empty
+          newDb = await createDatabaseFromSQL('');
+          viewManager.clear();
+          mvManager.clear();
+          dependencyTracker.clear();
+        }
 
-        // 2. Pre-build automatic demo graph (ARTIST, ARTWORK, SALE -> artwork_sales -> artwork_sales_mv)
-        dependencyTracker.registerView('ARTIST', 'table', []);
-        dependencyTracker.registerView('ARTWORK', 'table', []);
-        dependencyTracker.registerView('SALE', 'table', []);
+        // Update the stored database state
+        const base64 = uint8ToBase64(exportDatabase(newDb));
+        const updatedState: SerializableDatabaseState = {
+          metadata: activeDb.metadata,
+          views: viewManager.serialize(),
+          materializedViews: mvManager.serialize(),
+          dependencies: dependencyTracker.getGraph(),
+          history: [],
+          sqliteBase64: base64
+        };
 
-        const demoSQL = `CREATE VIEW artwork_sales AS SELECT a.title, ar.name AS artist_name, s.buyer, s.sale_price FROM ARTWORK a JOIN ARTIST ar ON a.artist_id = ar.artist_id JOIN SALE s ON a.artwork_id = s.artwork_id;\nCREATE MATERIALIZED VIEW artwork_sales_mv AS SELECT * FROM artwork_sales;`;
-        await executeMultiSQL({ db: newDb, viewManager, mvManager, dependencyTracker }, demoSQL);
-
-        set({
+        set((state) => ({
+          databases: { ...state.databases, [activeDatabaseId]: updatedState },
           db: newDb,
           history: [],
           labState: initialLabState,
@@ -363,7 +494,7 @@ export const useStore = create<AppStore>()(
           isSimulationPlaying: false,
           duplicateViewConflict: null,
           version: get().version + 1,
-        });
+        }));
 
         get().refreshSchema();
       },
@@ -405,12 +536,28 @@ export const useStore = create<AppStore>()(
     }),
     {
       name: 'viewlab-state',
-      partialize: (state) => ({
-        history: state.history,
-        labState: state.labState,
-        ui: state.ui,
-        aiSettings: state.aiSettings,
-      }),
+      partialize: (state) => {
+        // Save current active DB into databases map before persisting
+        const currentDatabases = { ...state.databases };
+        if (state.db && state.activeDatabaseId && currentDatabases[state.activeDatabaseId]) {
+          currentDatabases[state.activeDatabaseId] = {
+            ...currentDatabases[state.activeDatabaseId],
+            views: state.viewManager.serialize(),
+            materializedViews: state.mvManager.serialize(),
+            dependencies: state.dependencyTracker.getGraph(),
+            history: state.history,
+            sqliteBase64: uint8ToBase64(exportDatabase(state.db))
+          };
+        }
+        
+        return {
+          databases: currentDatabases,
+          activeDatabaseId: state.activeDatabaseId,
+          labState: state.labState,
+          ui: state.ui,
+          aiSettings: state.aiSettings,
+        };
+      },
     }
   )
 );

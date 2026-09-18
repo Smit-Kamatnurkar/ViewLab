@@ -137,12 +137,16 @@ export function AIAssistant() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const { lastResult, mvManager, aiSettings, activePage, dependencyTracker } = useStore(useShallow(state => ({
+  const { lastResult, mvManager, aiSettings, activePage, dependencyTracker, databases, activeDatabaseId, viewManager, schema } = useStore(useShallow(state => ({
     lastResult: state.lastResult,
     mvManager: state.mvManager,
     aiSettings: state.aiSettings,
     activePage: (state.ui as any).activePage || 'overview',
     dependencyTracker: state.dependencyTracker,
+    databases: state.databases,
+    activeDatabaseId: state.activeDatabaseId,
+    viewManager: state.viewManager,
+    schema: state.schema,
   })));
 
   const { provider, apiKey, model } = aiSettings;
@@ -166,10 +170,19 @@ export function AIAssistant() {
     const mvs = Array.from(mvManager.getAllViews().values()).map(mv => `${mv.name} (Status: ${mv.status})`).join(', ');
     const lastError = lastResult?.error ? lastResult.error : 'None';
     const graphState = dependencyTracker.getGraph();
+    const viewCount = viewManager.getViewNames().length;
+    const views = viewManager.getViewNames().join(', ');
+    const activeDb = databases[activeDatabaseId];
+    const activeDbName = activeDb?.metadata?.name || 'Unknown';
+    const tablesCount = schema?.tables.length || 0;
+    const tableNames = schema?.tables.map(t => t.name).join(', ') || 'None';
     
     return `Current Context:
+Active Database: ${activeDbName}
 Active Page User is Viewing: ${activePage}
-Materialized Views: ${mvCount} (${mvs})
+Tables: ${tablesCount} (${tableNames})
+Views: ${viewCount} (${views || 'None'})
+Materialized Views: ${mvCount} (${mvs || 'None'})
 Last Query Error: ${lastError}
 Last Result Rows: ${lastResult?.rowCount || 0}
 Dependency Graph Nodes: ${graphState.nodes.map(n => n.id + ' (' + n.type + ')').join(', ')}`;

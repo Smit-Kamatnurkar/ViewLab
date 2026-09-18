@@ -120,6 +120,33 @@ export async function initializeDatabase(): Promise<Database> {
   return db;
 }
 
+export async function createDatabaseFromSQL(schemaSql: string, seedSql?: string): Promise<Database> {
+  const SQL = await initSqlJs({ locateFile: () => wasmUrl });
+  const db = new SQL.Database();
+  db.run(schemaSql);
+  if (seedSql) db.run(seedSql);
+  return db;
+}
+
+export function uint8ToBase64(arr: Uint8Array): string {
+  // Using chunking to avoid Maximum call stack size exceeded on large arrays
+  const chunk = 0x8000;
+  const c = [];
+  for (let i = 0; i < arr.length; i += chunk) {
+    c.push(String.fromCharCode.apply(null, arr.subarray(i, i + chunk) as any));
+  }
+  return btoa(c.join(''));
+}
+
+export function base64ToUint8(b64: string): Uint8Array {
+  const str = atob(b64);
+  const arr = new Uint8Array(str.length);
+  for (let i = 0; i < str.length; i++) {
+    arr[i] = str.charCodeAt(i);
+  }
+  return arr;
+}
+
 export function exportDatabase(db: Database): Uint8Array {
   return db.export();
 }

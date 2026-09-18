@@ -7,10 +7,11 @@ interface Section {
   id: string;
   title: string;
   icon: string;
-  explanation: string;
-  technical: string;
+  explanation?: string;
+  technical?: string;
   example?: string;
-  diagram: JSX.Element;
+  diagram?: JSX.Element;
+  customContent?: JSX.Element;
   task?: { instruction: string; sql: string };
 }
 
@@ -117,6 +118,12 @@ const SECTIONS: Section[] = [
     technical: 'Decision factors: read frequency, write frequency, query complexity, latency requirements, storage budget, staleness tolerance. High read/write ratio with tolerance for staleness → MV. Low latency requirement for current data → View.',
     diagram: <DecisionDiagram />,
   },
+  {
+    id: 'tutorial-videos',
+    title: 'Tutorial Videos',
+    icon: '🎥',
+    customContent: <TutorialVideosContent />
+  }
 ];
 
 export function LearnPage() {
@@ -175,22 +182,31 @@ export function LearnPage() {
           </header>
 
           {/* Simple Explanation */}
-          <div className="p-6 rounded-xl bg-primary/5 border border-primary/20">
-            <h3 className="text-sm font-semibold text-primary uppercase tracking-wider mb-2">Simple Explanation</h3>
-            <p className="text-foreground leading-relaxed">{section.explanation}</p>
-          </div>
+          {section.explanation && (
+            <div className="p-6 rounded-xl bg-primary/5 border border-primary/20">
+              <h3 className="text-sm font-semibold text-primary uppercase tracking-wider mb-2">Simple Explanation</h3>
+              <p className="text-foreground leading-relaxed">{section.explanation}</p>
+            </div>
+          )}
 
           {/* Technical Definition */}
-          <div className="p-6 rounded-xl bg-muted/50 border border-border/20">
-            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">Technical Definition</h3>
-            <p className="text-foreground/80 leading-relaxed font-mono text-sm">{section.technical}</p>
-          </div>
+          {section.technical && (
+            <div className="p-6 rounded-xl bg-muted/50 border border-border/20">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">Technical Definition</h3>
+              <p className="text-foreground/80 leading-relaxed font-mono text-sm">{section.technical}</p>
+            </div>
+          )}
 
           {/* Visual Diagram */}
-          <div className="p-6 rounded-xl border border-border/20">
-            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Visual Diagram</h3>
-            {section.diagram}
-          </div>
+          {section.diagram && (
+            <div className="p-6 rounded-xl border border-border/20">
+              <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-4">Visual Diagram</h3>
+              {section.diagram}
+            </div>
+          )}
+
+          {/* Custom Content */}
+          {section.customContent}
 
           {/* Example */}
           {section.example && (
@@ -494,5 +510,103 @@ function DecisionDiagram() {
       <DiagramBox x={290} y={65} w={180} h={45} label="Use MATERIALIZED VIEW" sub="Fast, precomputed" color="var(--color-mv)" />
       <text x={250} y={145} textAnchor="middle" fill="hsl(var(--muted-foreground))" fontSize="10">Consider: read/write ratio, query complexity, staleness tolerance</text>
     </svg>
+  );
+}
+
+function TutorialVideosContent() {
+  const videos = [
+    {
+      id: 1,
+      author: 'Simplilearn',
+      title: 'View in SQL | SQL View Tutorial | Types of SQL View',
+      url: 'https://www.youtube.com/watch?v=ZZV7cc2PjdU',
+      description: 'Learning Views from scratch, types of views, creating views, and basic Materialized Views.',
+      recommended: true,
+    },
+    {
+      id: 2,
+      author: 'techTFQ',
+      title: 'Materialized View in SQL | Faster SQL Queries using Materialized Views',
+      url: 'https://www.youtube.com/watch?v=WzkBZ0byoYE',
+      description: 'Understanding Materialized Views, storage, performance, refreshing, and View vs Materialized View.',
+    },
+    {
+      id: 3,
+      author: 'Education 4u / Bhanu Priya',
+      title: 'Materialized View in DBMS',
+      url: 'https://www.youtube.com/watch?v=ZZV7cc2PjdU',
+      description: 'College-level DBMS theory and exam preparation.',
+    },
+    {
+      id: 4,
+      author: 'NamasteSQL',
+      title: 'Difference Between SQL Views vs Materialized Views',
+      url: 'https://youtu.be/sOEVAXskgno',
+      description: 'Quick revision and understanding the difference between Views and Materialized Views.',
+    },
+    {
+      id: 5,
+      author: 'Vishmita Data Labs',
+      title: 'SQL Views, Indexes & CTEs',
+      url: 'https://www.youtube.com/watch?v=mg4d-ss2AwI',
+      description: 'Connecting Views with other SQL concepts.',
+    }
+  ];
+
+  return (
+    <div className="space-y-8">
+      {/* Recommended Study Order */}
+      <div className="p-6 rounded-xl bg-primary/5 border border-primary/20">
+        <h3 className="text-sm font-semibold text-primary uppercase tracking-wider mb-2">Recommended Study Order</h3>
+        <p className="text-foreground mb-4">You don't need to watch all 5.</p>
+        <div className="flex flex-col gap-2 font-medium text-foreground">
+          <div>1 → Simplilearn</div>
+          <div>2 → techTFQ</div>
+          <div>4 → NamasteSQL</div>
+        </div>
+      </div>
+
+      {/* What You'll Learn Checklist */}
+      <div className="p-6 rounded-xl bg-muted/50 border border-border/20">
+        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">After these videos, you should know:</h3>
+        <ul className="space-y-2 text-sm text-foreground/80">
+          <li className="flex gap-2"><span>•</span> What is a View?</li>
+          <li className="flex gap-2"><span>•</span> Why are Views used?</li>
+          <li className="flex gap-2"><span>•</span> CREATE VIEW syntax</li>
+          <li className="flex gap-2"><span>•</span> Simple vs Complex Views</li>
+          <li className="flex gap-2"><span>•</span> Virtual table concept</li>
+          <li className="flex gap-2"><span>•</span> What is a Materialized View?</li>
+          <li className="flex gap-2"><span>•</span> How Materialized Views store data</li>
+          <li className="flex gap-2"><span>•</span> Refreshing Materialized Views</li>
+          <li className="flex gap-2"><span>•</span> View vs Materialized View</li>
+          <li className="flex gap-2"><span>•</span> Advantages & disadvantages</li>
+          <li className="flex gap-2"><span>•</span> Important viva questions</li>
+        </ul>
+      </div>
+
+      {/* Videos List */}
+      <div className="space-y-4">
+        {videos.map(video => (
+          <div key={video.id} className="p-6 rounded-xl bg-card border border-border/20 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors hover:bg-muted/30">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{video.id}. {video.author}</span>
+                {video.recommended && <span className="text-[10px] bg-primary/20 text-primary px-2 py-0.5 rounded-full font-bold">RECOMMENDED</span>}
+              </div>
+              <h4 className="text-lg font-bold text-foreground mb-2">{video.title}</h4>
+              <p className="text-sm text-foreground/80">{video.description}</p>
+            </div>
+            <a 
+              href={video.url} 
+              target="_blank" 
+              rel="noreferrer"
+              className="neo-button-primary px-4 py-2 rounded-lg text-sm whitespace-nowrap text-center flex-shrink-0"
+            >
+              Watch on YouTube
+            </a>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
