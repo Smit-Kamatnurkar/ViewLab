@@ -1,0 +1,287 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  /* LIGHT THEME (Default when .light or no .dark) */
+  :root, .light {
+    --background: 210 40% 98%;          /* Clean slate light background #F8FAFC */
+    --foreground: 222.2 84% 4.9%;       /* Slate 950 deep readable text #020817 */
+    --card: 0 0% 100%;                  /* Crisp white card #FFFFFF */
+    --card-foreground: 222.2 84% 4.9%;  /* Deep readable text */
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --border: 214.3 31.8% 91.4%;        /* Slate 200 clean border #E2E8F0 */
+    --input: 214.3 31.8% 91.4%;
+    --ring: 243 75% 59%;                /* Indigo 600 accent #4F46E5 */
+    --muted: 210 40% 96.1%;             /* Slate 100 muted surface #F1F5F9 */
+    --muted-foreground: 215.4 16.3% 46.9%; /* Slate 500 muted text #64748B */
+    --primary: 243 75% 59%;             /* Indigo 600 primary accent #4F46E5 */
+    --primary-foreground: 0 0% 100%;    /* White text on primary */
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --accent: 243 75% 59%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Semantic DB & Status Colors */
+    --color-live: 243 75% 59%;
+    --color-table: 217 91% 60%;
+    --color-view: 263 70% 55%;
+    --color-mv: 142 71% 45%;
+    --color-stale: 38 92% 50%;
+    --color-fresh: 142 71% 45%;
+    --color-refreshing: 217 91% 60%;
+    --color-success: 142 71% 45%;
+    --color-error: 0 84% 60%;
+    --color-warning: 38 92% 50%;
+    --color-info: 217 91% 60%;
+
+    --shadow-dark: rgba(0, 0, 0, 0.05);
+    --shadow-light: rgba(255, 255, 255, 0.8);
+  }
+
+  /* DARK THEME (.dark) */
+  .dark {
+    --background: 224 71% 4%;           /* Near-black neutral #090D16 */
+    --foreground: 210 40% 98%;          /* High contrast off-white #F8FAFC */
+    --card: 222 47% 9%;                 /* Dark neutral surface #131924 */
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 9%;
+    --popover-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;        /* Slate 800 subtle border #243044 */
+    --input: 217.2 32.6% 17.5%;
+    --ring: 243 75% 64%;                /* Indigo 500 accent #6366F1 */
+    --muted: 217.2 32.6% 13%;           /* Neutral muted surface */
+    --muted-foreground: 215 20.2% 65.1%; /* Slate 400 muted text #94A3B8 */
+    --primary: 243 75% 64%;             /* Indigo 500 primary accent #6366F1 */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 50.6%;
+    --destructive-foreground: 210 40% 98%;
+    --accent: 243 75% 64%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Semantic DB & Status Colors */
+    --color-live: 243 75% 64%;
+    --color-table: 217 91% 65%;
+    --color-view: 270 70% 60%;
+    --color-mv: 142 70% 45%;
+    --color-stale: 38 92% 50%;
+    --color-fresh: 142 70% 45%;
+    --color-refreshing: 217 91% 65%;
+    --color-success: 142 70% 45%;
+    --color-error: 0 84% 60%;
+    --color-warning: 38 92% 50%;
+    --color-info: 217 91% 65%;
+
+    --shadow-dark: rgba(0, 0, 0, 0.4);
+    --shadow-light: rgba(255, 255, 255, 0.02);
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased transition-colors duration-200;
+    background-color: hsl(var(--background));
+  }
+}
+
+@layer utilities {
+  .neo-surface {
+    @apply bg-card border border-border shadow-sm text-card-foreground transition-colors duration-200;
+    border-radius: 12px;
+  }
+
+  .neo-surface-inset {
+    @apply bg-muted/60 border border-border/60 text-foreground transition-colors duration-200;
+    border-radius: 12px;
+  }
+
+  .neo-button {
+    @apply transition-all duration-200 active:scale-95 bg-card border border-border text-foreground font-medium flex items-center justify-center shadow-sm;
+    border-radius: 8px;
+  }
+
+  .neo-button:hover {
+    @apply bg-muted/80 border-primary/40 text-primary;
+  }
+
+  .neo-button-primary {
+    @apply neo-button bg-primary text-primary-foreground border-primary/30 shadow-md;
+  }
+
+  .neo-button-primary:hover {
+    @apply bg-primary/90 text-primary-foreground;
+  }
+}
+
+/* CodeMirror editor styling */
+.cm-editor {
+  @apply bg-card text-foreground border border-border rounded-lg transition-colors duration-200;
+  height: 100%;
+}
+
+.cm-content {
+  font-family: 'JetBrains Mono', 'Fira Code', monospace !important;
+  font-size: 13px !important;
+  line-height: 1.6 !important;
+  color: inherit !important;
+}
+
+.cm-gutters {
+  @apply bg-muted/60 border-r border-border text-muted-foreground;
+}
+
+.cm-activeLineGutter {
+  @apply bg-accent/20 text-foreground font-bold;
+}
+
+.cm-lineNumbers .cm-gutterElement {
+  color: inherit;
+  opacity: 0.7;
+}
+
+.cm-activeLine {
+  @apply bg-muted/30;
+}
+
+.cm-selectionMatch {
+  @apply bg-primary/20;
+}
+
+/* React Flow styling */
+.react-flow__node {
+  @apply bg-card border border-border rounded-lg px-3 py-2 text-sm font-medium text-foreground shadow-sm transition-colors duration-200;
+}
+
+.react-flow__edge-path {
+  stroke: hsl(var(--muted-foreground));
+  stroke-width: 1.5;
+}
+
+.react-flow__handle {
+  @apply bg-primary border-2 border-background;
+  width: 10px;
+  height: 10px;
+}
+
+.react-flow__controls {
+  @apply bg-card border border-border text-foreground rounded-lg shadow-md overflow-hidden;
+}
+
+.react-flow__controls-button {
+  @apply bg-card border-b border-border text-foreground hover:bg-muted/80;
+}
+
+.react-flow__minimap {
+  @apply bg-card border border-border rounded-lg shadow-md;
+}
+
+/* Result Grid */
+.result-grid {
+  @apply w-full border-collapse text-sm text-foreground;
+}
+
+.result-grid th {
+  @apply text-left p-2 border-b border-border font-medium text-muted-foreground bg-muted/60 sticky top-0 z-10;
+}
+
+.result-grid td {
+  @apply p-2 border-b border-border/50 text-foreground;
+}
+
+.result-grid tr:hover td {
+  @apply bg-muted/40;
+}
+
+.result-grid tr:last-child td {
+  @apply border-b-0;
+}
+
+/* Simulation Animations */
+@keyframes flowPulse {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes dataFlow {
+  0% { stroke-dashoffset: 24; }
+  100% { stroke-dashoffset: 0; }
+}
+
+@keyframes refreshSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes staleFlash {
+  0%, 100% { box-shadow: 0 0 0 0 hsl(var(--color-stale) / 0); }
+  50% { box-shadow: 0 0 16px 4px hsl(var(--color-stale) / 0.4); }
+}
+
+.animate-flow-pulse {
+  animation: flowPulse 2s ease-in-out infinite;
+}
+
+.animate-slide-down {
+  animation: slideDown 0.4s ease-out forwards;
+}
+
+.animate-fade-in-scale {
+  animation: fadeInScale 0.3s ease-out forwards;
+}
+
+.animate-data-flow {
+  stroke-dasharray: 8 4;
+  animation: dataFlow 0.8s linear infinite;
+}
+
+.animate-refresh-spin {
+  animation: refreshSpin 1s linear infinite;
+}
+
+.animate-stale-flash {
+  animation: staleFlash 2s ease-in-out infinite;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Print-friendly export */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+    color: black !important;
+  }
+}
